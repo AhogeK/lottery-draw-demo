@@ -32,7 +32,7 @@ public class LotteryDrawDemoApplication {
             // 遍历 inputNewDrawNumber 集合
             inputNewDrawNumber.forEach(itemNumbers -> {
                 // 遍历每一项，其中第一项为日期，先判断数据库有无该日期的数据，如果没有才执行操作
-                LocalDate date = LocalDate.parse(itemNumbers.get(0),
+                LocalDate date = LocalDate.parse(itemNumbers.getFirst(),
                         DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 if (lotteryDateRepository.countByLotteryDrawTime(date) == 0) {
                     List<LotteryData> insertList = new ArrayList<>();
@@ -67,11 +67,21 @@ public class LotteryDrawDemoApplication {
 
 
             List<List<String>> inputNewDrawNumber = List.of(
-                    List.of("2023-10-28", "02", "14", "16", "28", "30", "02", "07"),
-                    List.of("2023-10-30", "06", "18", "23", "27", "32", "06", "10"),
-                    List.of("2023-11-01", "07", "25", "26", "29", "32", "02", "08"),
-                    List.of("2023-11-04", "07", "12", "17", "26", "34", "02", "06"),
-                    List.of("2023-11-06", "04", "07", "08", "18", "19", "02", "06")
+                    List.of("2023-11-08", "01", "05", "07", "12", "13", "02", "06"),
+                    List.of("2023-11-11", "09", "23", "25", "27", "33", "06", "12"),
+                    List.of("2023-11-13", "13", "20", "27", "29", "30", "01", "07"),
+                    List.of("2023-11-15", "03", "07", "21", "22", "24", "06", "07"),
+                    List.of("2023-11-18", "03", "04", "12", "15", "23", "02", "06"),
+                    List.of("2023-11-20", "10", "18", "25", "28", "33", "05", "11"),
+                    List.of("2023-11-22", "10", "15", "22", "27", "33", "01", "12"),
+                    List.of("2023-11-25", "05", "18", "22", "28", "29", "09", "12"),
+                    List.of("2023-11-27", "13", "23", "27", "30", "34", "06", "09"),
+                    List.of("2023-11-29", "04", "19", "21", "30", "31", "06", "12"),
+                    List.of("2023-12-02", "07", "12", "20", "28", "31", "09", "10"),
+                    List.of("2023-12-04", "15", "16", "25", "31", "34", "05", "09"),
+                    List.of("2023-12-06", "01", "02", "09", "19", "30", "01", "02"),
+                    List.of("2023-12-09", "04", "22", "25", "30", "31", "04", "05"),
+                    List.of("2023-12-11", "04", "13", "15", "17", "32", "10", "12")
             );
             checkNewInputDrawNumber(lotteryDateRepository, inputNewDrawNumber);
 
