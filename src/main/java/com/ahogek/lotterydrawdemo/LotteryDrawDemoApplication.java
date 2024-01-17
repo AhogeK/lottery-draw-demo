@@ -3,6 +3,8 @@ package com.ahogek.lotterydrawdemo;
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
 import com.ahogek.lotterydrawdemo.repository.LotteryDataRepository;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -11,8 +13,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 @EnableTransactionManagement
@@ -58,6 +64,24 @@ public class LotteryDrawDemoApplication {
         }
     }
 
+    private static long getCount(LocalDate lastDate, LocalDate now) {
+        long count = 0;
+        LocalDate nextLotteryDate = lastDate;
+        while (nextLotteryDate.isBefore(now) || nextLotteryDate.isEqual(now)) {
+            if (nextLotteryDate.getDayOfWeek() == DayOfWeek.SATURDAY) {
+                nextLotteryDate = nextLotteryDate.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+                count++;
+            } else if (nextLotteryDate.getDayOfWeek() == DayOfWeek.MONDAY) {
+                nextLotteryDate = nextLotteryDate.with(TemporalAdjusters.next(DayOfWeek.WEDNESDAY));
+                count++;
+            } else if (nextLotteryDate.getDayOfWeek() == DayOfWeek.WEDNESDAY) {
+                nextLotteryDate = nextLotteryDate.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
+                count++;
+            }
+        }
+        return count;
+    }
+
     @Bean
     public CommandLineRunner getRandomLotteryNumber(LotteryDataService service, LotteryRequestManager request, LotteryDataRepository lotteryDateRepository) {
         return args -> {
@@ -65,25 +89,30 @@ public class LotteryDrawDemoApplication {
             if (all.isEmpty())
                 request.setData();
 
+            // 获取数据库中最新的一期数据的时间
+            LocalDate lastDate = lotteryDateRepository.findTopByOrderByLotteryDrawTimeDesc().getLotteryDrawTime();
+            // 根据但前时间判断 lastDate 是否是最新一期，彩票每周一 三 六开奖
+            LocalDate now = LocalDate.now();
 
-            List<List<String>> inputNewDrawNumber = List.of(
-                    List.of("2023-11-08", "01", "05", "07", "12", "13", "02", "06"),
-                    List.of("2023-11-11", "09", "23", "25", "27", "33", "06", "12"),
-                    List.of("2023-11-13", "13", "20", "27", "29", "30", "01", "07"),
-                    List.of("2023-11-15", "03", "07", "21", "22", "24", "06", "07"),
-                    List.of("2023-11-18", "03", "04", "12", "15", "23", "02", "06"),
-                    List.of("2023-11-20", "10", "18", "25", "28", "33", "05", "11"),
-                    List.of("2023-11-22", "10", "15", "22", "27", "33", "01", "12"),
-                    List.of("2023-11-25", "05", "18", "22", "28", "29", "09", "12"),
-                    List.of("2023-11-27", "13", "23", "27", "30", "34", "06", "09"),
-                    List.of("2023-11-29", "04", "19", "21", "30", "31", "06", "12"),
-                    List.of("2023-12-02", "07", "12", "20", "28", "31", "09", "10"),
-                    List.of("2023-12-04", "15", "16", "25", "31", "34", "05", "09"),
-                    List.of("2023-12-06", "01", "02", "09", "19", "30", "01", "02"),
-                    List.of("2023-12-09", "04", "22", "25", "30", "31", "04", "05"),
-                    List.of("2023-12-11", "04", "13", "15", "17", "32", "10", "12")
-            );
-            checkNewInputDrawNumber(lotteryDateRepository, inputNewDrawNumber);
+            if (ChronoUnit.DAYS.between(lastDate, now) >= 2) {
+                // 判断 lastDate 直到今天为止少了多少次开奖
+                long count = getCount(lastDate, now);
+                // 根据 count 查询彩票网数据
+                JSONObject response = request.getNextPage(Math.toIntExact(count));
+                List<List<String>> inputNewDrawNumber = new ArrayList<>();
+                JSONArray list = response.getJSONObject("value").getJSONArray("list");
+                for (int i = 0; i < list.size(); i++) {
+                    JSONObject data = list.getJSONObject(i);
+                    String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
+                    List<String> item = new ArrayList<>();
+                    item.add(LocalDate.ofInstant(data.getDate("lotteryDrawTime").toInstant(),
+                            ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                    item.addAll(Arrays.asList(drawNumbers).subList(0, 7));
+                    inputNewDrawNumber.add(item);
+                }
+                inputNewDrawNumber = inputNewDrawNumber.reversed();
+                checkNewInputDrawNumber(lotteryDateRepository, inputNewDrawNumber);
+            }
 
             List<String> result = new ArrayList<>((int) (7 / 0.75f + 1));
 

@@ -30,7 +30,7 @@ public class LotteryRequestManager {
     private static final Logger LOG = LoggerFactory.getLogger(LotteryRequestManager.class);
     private final OkHttpClient client;
     private final String baseUrl;
-    private final int pageSize;
+    private int pageSize;
     private final int gameNo;
     private final int provinceId;
     private final int isVerify;
@@ -56,7 +56,7 @@ public class LotteryRequestManager {
             List<LotteryData> insertData = new ArrayList<>();
             // 初始化
             do {
-                JSONObject response = getNextPage();
+                JSONObject response = getNextPage(null);
 
                 JSONArray list = response.getJSONObject("value").getJSONArray("list");
                 for (int i = 0; i < list.size(); i++) {
@@ -75,7 +75,9 @@ public class LotteryRequestManager {
         }
     }
 
-    public JSONObject getNextPage() throws IOException {
+    public JSONObject getNextPage(Integer count) throws IOException {
+        if (count != null)
+            this.pageSize = count;
         HttpUrl parse = HttpUrl.parse(baseUrl);
         if (parse != null) {
             HttpUrl.Builder urlBuilder = parse.newBuilder()

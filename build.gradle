@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
+	implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.12'
 	implementation 'com.alibaba.fastjson2:fastjson2:2.0.41'
 	implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0")
 

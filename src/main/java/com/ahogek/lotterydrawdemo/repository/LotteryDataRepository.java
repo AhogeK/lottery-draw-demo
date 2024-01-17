@@ -13,4 +13,6 @@ import java.time.LocalDate;
 @Repository
 public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> {
     long countByLotteryDrawTime(LocalDate lotteryDrawTime);
+
+    LotteryData findTopByOrderByLotteryDrawTimeDesc();
 }
