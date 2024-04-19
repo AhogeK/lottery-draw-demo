@@ -56,7 +56,7 @@ public class LotteryDrawDemoApplication {
         }
     }
 
-    private static void groupAllData(List<List<String>> allData, List<LotteryData> all) {
+    public static void groupAllData(List<List<String>> allData, List<LotteryData> all) {
         for (int i = 0; i < 7; i++) {
             int type = i;
             allData.add(all.stream().filter(item -> type == item.getLotteryDrawNumberType())
@@ -138,7 +138,7 @@ public class LotteryDrawDemoApplication {
         };
     }
 
-    private void drawNumbers(int i, List<List<String>> allDataGroup, Set<String> front, Set<String> back) {
+    public void drawNumbers(int i, List<List<String>> allDataGroup, Set<String> front, Set<String> back) {
         if (i < 5) {
             do {
                 int index = this.random.nextInt(allDataGroup.get(i).size());
