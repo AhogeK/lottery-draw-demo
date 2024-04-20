@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -67,7 +68,7 @@ public class LotteryDrawDemoApplication {
     private static long getCount(LocalDate lastDate, LocalDate now) {
         long count = 0;
         LocalDate nextLotteryDate = lastDate;
-        while (nextLotteryDate.isBefore(now) || nextLotteryDate.isEqual(now)) {
+        while (nextLotteryDate.isBefore(now)) {
             if (nextLotteryDate.getDayOfWeek() == DayOfWeek.SATURDAY) {
                 nextLotteryDate = nextLotteryDate.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
                 count++;
@@ -78,6 +79,9 @@ public class LotteryDrawDemoApplication {
                 nextLotteryDate = nextLotteryDate.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
                 count++;
             }
+        }
+        if (LocalDateTime.now().getHour() < 22) {
+            count--;
         }
         return count;
     }
@@ -97,21 +101,23 @@ public class LotteryDrawDemoApplication {
             if (ChronoUnit.DAYS.between(lastDate, now) >= 2) {
                 // 判断 lastDate 直到今天为止少了多少次开奖
                 long count = getCount(lastDate, now);
-                // 根据 count 查询彩票网数据
-                JSONObject response = request.getNextPage(Math.toIntExact(count));
-                List<List<String>> inputNewDrawNumber = new ArrayList<>();
-                JSONArray list = response.getJSONObject("value").getJSONArray("list");
-                for (int i = 0; i < list.size(); i++) {
-                    JSONObject data = list.getJSONObject(i);
-                    String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
-                    List<String> item = new ArrayList<>();
-                    item.add(LocalDate.ofInstant(data.getDate("lotteryDrawTime").toInstant(),
-                            ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-                    item.addAll(Arrays.asList(drawNumbers).subList(0, 7));
-                    inputNewDrawNumber.add(item);
+                if (count > 0) {
+                    // 根据 count 查询彩票网数据
+                    JSONObject response = request.getNextPage(Math.toIntExact(count));
+                    List<List<String>> inputNewDrawNumber = new ArrayList<>();
+                    JSONArray list = response.getJSONObject("value").getJSONArray("list");
+                    for (int i = 0; i < list.size(); i++) {
+                        JSONObject data = list.getJSONObject(i);
+                        String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
+                        List<String> item = new ArrayList<>();
+                        item.add(LocalDate.ofInstant(data.getDate("lotteryDrawTime").toInstant(),
+                                ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                        item.addAll(Arrays.asList(drawNumbers).subList(0, 7));
+                        inputNewDrawNumber.add(item);
+                    }
+                    inputNewDrawNumber = inputNewDrawNumber.reversed();
+                    checkNewInputDrawNumber(lotteryDateRepository, inputNewDrawNumber);
                 }
-                inputNewDrawNumber = inputNewDrawNumber.reversed();
-                checkNewInputDrawNumber(lotteryDateRepository, inputNewDrawNumber);
             }
 
             List<String> result = new ArrayList<>((int) (7 / 0.75f + 1));
