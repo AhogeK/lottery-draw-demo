@@ -68,7 +68,7 @@ public class LotteryDrawDemoApplication {
     private static long getCount(LocalDate lastDate, LocalDate now) {
         long count = 0;
         LocalDate nextLotteryDate = lastDate;
-        while (nextLotteryDate.isBefore(now)) {
+        while (nextLotteryDate.isBefore(now) || (nextLotteryDate.isEqual(now) && LocalDateTime.now().getHour() >= 22)) {
             if (nextLotteryDate.getDayOfWeek() == DayOfWeek.SATURDAY) {
                 nextLotteryDate = nextLotteryDate.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
                 count++;
@@ -80,9 +80,7 @@ public class LotteryDrawDemoApplication {
                 count++;
             }
         }
-        if (LocalDateTime.now().getHour() < 22) {
-            count--;
-        }
+
         return count;
     }
 
