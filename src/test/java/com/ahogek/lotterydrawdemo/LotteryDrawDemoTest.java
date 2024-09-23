@@ -8,10 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 用于测试是否可以抽到一等奖
@@ -42,7 +39,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("03", "13", "15", "17", "22", "06", "10");
+        List<String> firstPrize = List.of("05", "11", "19", "22", "29", "02", "12");
 
         long count = 0;
         do {
@@ -64,6 +61,17 @@ class LotteryDrawDemoTest {
     @Test
     void testDraw() {
         long count = 0;
+        long maxCount = 7579991314L;
+        long randomCount = new Random().nextLong(maxCount);
+        long finalCount;
+
+        do {
+            count++;
+            finalCount = new Random().nextLong(maxCount);
+        } while (count != randomCount);
+
+        count = 0;
+
         do {
             count++;
             result.clear();
@@ -74,7 +82,7 @@ class LotteryDrawDemoTest {
             }
             front.stream().sorted().forEach(result::add);
             back.stream().sorted().forEach(result::add);
-        } while (count != 757520999);
+        } while (count != finalCount);
 
         Assertions.assertNotNull(result);
 
