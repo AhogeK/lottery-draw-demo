@@ -1,26 +1,3 @@
 spring:
-  datasource:
-    url: jdbc:mysql://192.168.50.227:3306/lottery_draw_demo?serverTimezone=Asia/Shanghai&useLegacyDatetimeCode=false&allowPublicKeyRetrieval=true
-    username: ahogek
-    password: Ji@qiShi@123
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 15
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-
-  jpa:
-    properties:
-      hibernate:
-        ddl-auto: update
-        jdbc:
-          batch_size: 100
-          batch_versioned_data: true
-        order_inserts: true
-        order_updates: true
-
-  sql:
-    init:
-      mode: never
+  profiles:
+    active: dev
