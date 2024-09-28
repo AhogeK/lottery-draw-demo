@@ -2,6 +2,7 @@ package com.ahogek.lotterydrawdemo;
 
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
+import com.ahogek.lotterydrawdemo.util.ProgressBarWithTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,8 @@ class LotteryDrawDemoTest {
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 
+        ProgressBarWithTime progressBar = new ProgressBarWithTime(totalCount, 50);
+
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out))) {
             do {
                 count++;
@@ -84,8 +87,7 @@ class LotteryDrawDemoTest {
                 back.stream().sorted().forEach(result::add);
 
                 if (count >= nextUpdate) {
-                    double progress = (double) count / totalCount;
-                    updateProgressBar(writer, progress);
+                    progressBar.updateProgressBar(writer, count);
                     nextUpdate += updateInterval;
                 }
             } while (count != totalCount);
@@ -99,21 +101,5 @@ class LotteryDrawDemoTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void updateProgressBar(BufferedWriter writer, double progress) throws IOException {
-        int width = 50; // 进度条的总宽度
-        int completedWidth = (int) (width * progress);
-        StringBuilder sb = new StringBuilder("\r[");
-        for (int i = 0; i < width; i++) {
-            if (i < completedWidth) {
-                sb.append("#");
-            } else {
-                sb.append(" ");
-            }
-        }
-        sb.append("] ").append(String.format("%.2f%%", progress * 100));
-        writer.write(sb.toString());
-        writer.flush();
     }
 }
