@@ -8,7 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 用于测试是否可以抽到一等奖
@@ -39,7 +45,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("05", "11", "19", "22", "29", "02", "12");
+        List<String> firstPrize = List.of("05", "15", "24", "31", "34", "03", "10");
 
         long count = 0;
         do {
@@ -61,31 +67,53 @@ class LotteryDrawDemoTest {
     @Test
     void testDraw() {
         long count = 0;
-        long maxCount = 7579991314L;
-        long randomCount = new Random().nextLong(maxCount);
-        long finalCount;
+        long totalCount = 17575219991L;
+        long updateInterval = totalCount / 10000;
+        long nextUpdate = updateInterval;
 
-        do {
-            count++;
-            finalCount = new Random().nextLong(maxCount);
-        } while (count != randomCount);
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out))) {
+            do {
+                count++;
+                result.clear();
+                front.clear();
+                back.clear();
+                for (int i = 0; i < 7; i++) {
+                    application.drawNumbers(i, allDataGroup, front, back);
+                }
+                front.stream().sorted().forEach(result::add);
+                back.stream().sorted().forEach(result::add);
 
-        count = 0;
+                if (count >= nextUpdate) {
+                    double progress = (double) count / totalCount;
+                    updateProgressBar(writer, progress);
+                    nextUpdate += updateInterval;
+                }
+            } while (count != totalCount);
 
-        do {
-            count++;
-            result.clear();
-            front.clear();
-            back.clear();
-            for (int i = 0; i < 7; i++) {
-                application.drawNumbers(i, allDataGroup, front, back);
+            writer.write("\n");
+            writer.flush();
+
+            Assertions.assertNotNull(result);
+
+            System.out.println("随机摇奖号码为：" + result + "，祝你好运！");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updateProgressBar(BufferedWriter writer, double progress) throws IOException {
+        int width = 50; // 进度条的总宽度
+        int completedWidth = (int) (width * progress);
+        StringBuilder sb = new StringBuilder("\r[");
+        for (int i = 0; i < width; i++) {
+            if (i < completedWidth) {
+                sb.append("#");
+            } else {
+                sb.append(" ");
             }
-            front.stream().sorted().forEach(result::add);
-            back.stream().sorted().forEach(result::add);
-        } while (count != finalCount);
-
-        Assertions.assertNotNull(result);
-
-        System.out.println("随机摇奖号码为：" + result + "，祝你好运！");
+        }
+        sb.append("] ").append(String.format("%.2f%%", progress * 100));
+        writer.write(sb.toString());
+        writer.flush();
     }
 }
