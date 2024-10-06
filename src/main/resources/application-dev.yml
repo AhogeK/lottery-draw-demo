@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/lottery_draw_demo?serverTimezone=Asia/Shanghai&useLegacyDatetimeCode=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/lottery_draw_demo?serverTimezone=Asia/Shanghai&useLegacyDatetimeCode=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -20,6 +20,7 @@ spring:
           batch_versioned_data: true
         order_inserts: true
         order_updates: true
+        generate_statistics: true
 
   sql:
     init:

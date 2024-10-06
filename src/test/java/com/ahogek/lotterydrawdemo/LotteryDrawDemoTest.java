@@ -1,6 +1,8 @@
 package com.ahogek.lotterydrawdemo;
 
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
+import com.ahogek.lotterydrawdemo.entity.SelfChosen;
+import com.ahogek.lotterydrawdemo.repository.SelfChosenRepository;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
 import com.ahogek.lotterydrawdemo.util.ProgressBarWithTime;
 import org.junit.jupiter.api.Assertions;
@@ -30,6 +32,9 @@ class LotteryDrawDemoTest {
     LotteryDataService service;
 
     @Autowired
+    SelfChosenRepository selfChosenRepository;
+
+    @Autowired
     LotteryDrawDemoApplication application;
 
     List<LotteryData> all = new ArrayList<>();
@@ -42,11 +47,12 @@ class LotteryDrawDemoTest {
     void beforeAll() {
         all = service.findAll();
         LotteryDrawDemoApplication.groupAllData(allDataGroup, all);
+        LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAll());
     }
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("05", "15", "24", "31", "34", "03", "10");
+        List<String> firstPrize = List.of("16", "18", "25", "26", "33", "04", "08");
 
         long count = 0;
         do {
@@ -96,6 +102,13 @@ class LotteryDrawDemoTest {
             writer.flush();
 
             Assertions.assertNotNull(result);
+            // 对结果进行存储
+            List<SelfChosen> insertList = new ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                SelfChosen selfChosen = new SelfChosen(result.get(i), i);
+                insertList.add(selfChosen);
+            }
+            selfChosenRepository.saveAll(insertList);
 
             System.out.println("随机摇奖号码为：" + result + "，祝你好运！");
         } catch (IOException e) {

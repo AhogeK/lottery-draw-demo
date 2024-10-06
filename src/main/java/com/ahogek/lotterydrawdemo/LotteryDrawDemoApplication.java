@@ -1,6 +1,7 @@
 package com.ahogek.lotterydrawdemo;
 
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
+import com.ahogek.lotterydrawdemo.entity.SelfChosen;
 import com.ahogek.lotterydrawdemo.repository.LotteryDataRepository;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
 import com.alibaba.fastjson2.JSONArray;
@@ -62,6 +63,17 @@ public class LotteryDrawDemoApplication {
             int type = i;
             allData.add(all.stream().filter(item -> type == item.getLotteryDrawNumberType())
                     .map(LotteryData::getLotteryDrawNumber).toList());
+        }
+    }
+
+    public static void groupSelfChosenData(List<List<String>> allDataGroup, List<SelfChosen> all) {
+        if (all.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < 7; i++) {
+            int type = i;
+            allDataGroup.add(all.stream().filter(item -> type == item.getNumberType())
+                    .map(SelfChosen::getNumber).toList());
         }
     }
 
