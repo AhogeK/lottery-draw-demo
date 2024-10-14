@@ -52,7 +52,16 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("16", "18", "25", "26", "33", "04", "08");
+        List<String> firstPrize = List.of("01", "08", "17", "29", "33", "03", "04");
+
+        // 先检查是否有历史一等奖
+        int check = service.checkFirstPrize(firstPrize);
+        if (check > 0) {
+            System.out.println("该号码历史上已经中过一等奖" + check + "次，祝你好运！");
+        } else {
+            System.out.println("该号码历史上还没有中过一等奖，祝你好运！");
+        }
+
 
         long count = 0;
         do {
@@ -74,7 +83,7 @@ class LotteryDrawDemoTest {
     @Test
     void testDraw() {
         long count = 0;
-        long totalCount = 17575219991L;
+        long totalCount = 7579991314L;
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 

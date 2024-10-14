@@ -71,4 +71,12 @@ public class LotteryDataServiceImpl implements LotteryDataService {
     public List<LotteryData> findAll() {
         return lotteryDataRepository.findAll();
     }
+
+    @Override
+    public int checkFirstPrize(List<String> firstPrize) {
+        // 这里可以实现检查是否有历史一等奖的逻辑
+        var matchingDrawDates = lotteryDataRepository.findMatchingDrawDates(firstPrize);
+
+        return matchingDrawDates.size();
+    }
 }

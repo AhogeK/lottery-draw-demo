@@ -13,4 +13,6 @@ public interface LotteryDataService {
     void batchInsert(List<LotteryData> data);
 
     List<LotteryData> findAll();
+
+    int checkFirstPrize(List<String> firstPrize);
 }
