@@ -5,9 +5,12 @@ import com.ahogek.lotterydrawdemo.entity.SelfChosen;
 import com.ahogek.lotterydrawdemo.repository.SelfChosenRepository;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
 import com.ahogek.lotterydrawdemo.util.ProgressBarWithTime;
+import com.alibaba.fastjson2.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -28,6 +31,7 @@ import java.util.Set;
 @SpringBootTest
 class LotteryDrawDemoTest {
 
+    private static final Logger log = LoggerFactory.getLogger(LotteryDrawDemoTest.class);
     @Autowired
     LotteryDataService service;
 
@@ -36,6 +40,9 @@ class LotteryDrawDemoTest {
 
     @Autowired
     LotteryDrawDemoApplication application;
+
+    @Autowired
+    LotteryRequestManager manager;
 
     List<LotteryData> all = new ArrayList<>();
     List<String> result = new ArrayList<>((int) (7 / 0.75f + 1));
@@ -52,7 +59,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("01", "08", "17", "29", "33", "03", "04");
+        List<String> firstPrize = List.of("05", "14", "18", "33", "34", "04", "07");
 
         // 先检查是否有历史一等奖
         int check = service.checkFirstPrize(firstPrize);
@@ -123,5 +130,14 @@ class LotteryDrawDemoTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void checkResponse() {
+        Assertions.assertDoesNotThrow(() -> {
+            JSONObject nextPage = manager.getNextPage(1);
+            Assertions.assertNotNull(nextPage);
+            log.info("{}", nextPage);
+        });
     }
 }

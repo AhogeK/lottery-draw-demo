@@ -24,6 +24,8 @@ public class LotteryData {
 
     private Integer lotteryDrawNumberType;
 
+    private Integer sort;
+
     public Long getId() {
         return id;
     }
@@ -54,5 +56,13 @@ public class LotteryData {
 
     public void setLotteryDrawNumberType(Integer lotteryDrawNumberType) {
         this.lotteryDrawNumberType = lotteryDrawNumberType;
+    }
+
+    public Integer getSort() {
+        return sort;
+    }
+
+    public void setSort(Integer sort) {
+        this.sort = sort;
     }
 }

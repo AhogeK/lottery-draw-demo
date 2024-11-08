@@ -36,9 +36,9 @@ public class LotteryDataServiceImpl implements LotteryDataService {
             int start = batch * batchSize;
             int end = Math.min(start + batchSize, data.size());
 
-            StringBuilder sql = new StringBuilder("INSERT INTO lottery_data (lottery_draw_time, lottery_draw_number, lottery_draw_number_type) VALUES ");
+            StringBuilder sql = new StringBuilder("INSERT INTO lottery_data (lottery_draw_time, lottery_draw_number, lottery_draw_number_type, sort) VALUES ");
 
-            sql.append("(?, ?, ?),".repeat(Math.max(0, end - start)));
+            sql.append("(?, ?, ?, ?),".repeat(Math.max(0, end - start)));
             if (end > start) {
                 sql.setLength(sql.length() - 1); // 移除最后一个逗号
             }
@@ -48,11 +48,12 @@ public class LotteryDataServiceImpl implements LotteryDataService {
 
                 for (int i = start; i < end; i++) {
                     LotteryData item = data.get(i);
-                    int paramIndex = (i - start) * 3;
+                    int paramIndex = (i - start) * 4;
                     // 数据校验可以在这里进行
                     query.setParameter(paramIndex + 1, item.getLotteryDrawTime());
                     query.setParameter(paramIndex + 2, item.getLotteryDrawNumber());
                     query.setParameter(paramIndex + 3, item.getLotteryDrawNumberType());
+                    query.setParameter(paramIndex + 4, item.getSort());
                 }
 
                 query.executeUpdate();

@@ -19,7 +19,9 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author AhogeK ahogek@gmail.com
@@ -62,11 +64,32 @@ public class LotteryRequestManager {
                 for (int i = 0; i < list.size(); i++) {
                     JSONObject data = list.getJSONObject(i);
                     String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
+                    String[] lotteryUnsortDrawresult = data.getString("lotteryUnsortDrawresult").split(" ");
+                    Map<String, Integer> frontMap = new HashMap<>();
+                    Map<String, Integer> backMap = new HashMap<>();
+                    if (lotteryUnsortDrawresult.length == 7) {
+                        for (int j = 0; j < 7; j++) {
+                            if (j < 5) {
+                                frontMap.put(lotteryUnsortDrawresult[j], j + 1);
+                            } else {
+                                backMap.put(lotteryUnsortDrawresult[j], j + 1);
+                            }
+                        }
+                    }
                     for (int j = 0; j < 7; j++) {
                         LotteryData lotteryData = new LotteryData();
                         lotteryData.setLotteryDrawTime(LocalDate.ofInstant(data.getDate("lotteryDrawTime").toInstant(), ZoneId.systemDefault()));
                         lotteryData.setLotteryDrawNumber(drawNumbers[j]);
                         lotteryData.setLotteryDrawNumberType(j);
+                        if (lotteryUnsortDrawresult.length == 7) {
+                            if (j < 5) {
+                                lotteryData.setSort(frontMap.get(drawNumbers[j]));
+                            } else {
+                                lotteryData.setSort(backMap.get(drawNumbers[j]));
+                            }
+                        } else {
+                            lotteryData.setSort(j + 1);
+                        }
                         insertData.add(lotteryData);
                     }
                 }

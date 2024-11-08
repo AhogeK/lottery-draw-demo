@@ -44,11 +44,16 @@ public class LotteryDrawDemoApplication {
                         DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 if (lotteryDateRepository.countByLotteryDrawTime(date) == 0) {
                     List<LotteryData> insertList = new ArrayList<>();
-                    for (int i = 1; i < itemNumbers.size(); i++) {
+                    for (int i = 1; i < 8; i++) {
                         LotteryData lotteryDrawNumber = new LotteryData();
                         lotteryDrawNumber.setLotteryDrawNumber(itemNumbers.get(i));
                         lotteryDrawNumber.setLotteryDrawTime(date);
                         lotteryDrawNumber.setLotteryDrawNumberType(i - 1);
+                        if (itemNumbers.size() > 8) {
+                            lotteryDrawNumber.setSort(Integer.parseInt(itemNumbers.get(i + 7)));
+                        } else {
+                            lotteryDrawNumber.setSort(i);
+                        }
                         insertList.add(lotteryDrawNumber);
                     }
                     if (!insertList.isEmpty())
@@ -59,9 +64,9 @@ public class LotteryDrawDemoApplication {
     }
 
     public static void groupAllData(List<List<String>> allData, List<LotteryData> all) {
-        for (int i = 0; i < 7; i++) {
+        for (int i = 1; i <= 7; i++) {
             int type = i;
-            allData.add(all.stream().filter(item -> type == item.getLotteryDrawNumberType())
+            allData.add(all.stream().filter(item -> type == item.getSort())
                     .map(LotteryData::getLotteryDrawNumber).toList());
         }
     }
@@ -121,10 +126,14 @@ public class LotteryDrawDemoApplication {
                     for (int i = 0; i < list.size(); i++) {
                         JSONObject data = list.getJSONObject(i);
                         String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
+                        String[] unsortDrawResult = data.getString("lotteryUnsortDrawresult").split(" ");
                         List<String> item = new ArrayList<>();
                         item.add(LocalDate.ofInstant(data.getDate("lotteryDrawTime").toInstant(),
                                 ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                         item.addAll(Arrays.asList(drawNumbers).subList(0, 7));
+                        if (unsortDrawResult.length == 7) {
+                            item.addAll(Arrays.asList(unsortDrawResult));
+                        }
                         inputNewDrawNumber.add(item);
                     }
                     inputNewDrawNumber = inputNewDrawNumber.reversed();
@@ -141,6 +150,10 @@ public class LotteryDrawDemoApplication {
 
             List<List<String>> allDataGroup = new ArrayList<>();
 
+            if (all.isEmpty()) {
+                // 初次运行时，数据库中没有数据，需要在执行一次
+                all = service.findAll();
+            }
             groupAllData(allDataGroup, all);
 
             for (int i = 0; i < 7; i++) {
