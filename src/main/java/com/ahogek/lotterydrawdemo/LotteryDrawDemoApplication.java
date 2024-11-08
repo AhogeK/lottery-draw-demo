@@ -77,7 +77,7 @@ public class LotteryDrawDemoApplication {
         }
         for (int i = 0; i < 7; i++) {
             int type = i;
-            allDataGroup.add(all.stream().filter(item -> type == item.getNumberType())
+            allDataGroup.add(all.stream().filter(item -> type == item.getSort() - 1)
                     .map(SelfChosen::getNumber).toList());
         }
     }

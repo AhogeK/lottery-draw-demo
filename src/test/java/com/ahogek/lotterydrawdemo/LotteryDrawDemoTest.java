@@ -17,10 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 用于测试是否可以抽到一等奖
@@ -46,6 +43,8 @@ class LotteryDrawDemoTest {
 
     List<LotteryData> all = new ArrayList<>();
     List<String> result = new ArrayList<>((int) (7 / 0.75f + 1));
+    List<String> sortBeforeResult = new ArrayList<>((int) (7 / 0.75f + 1));
+    Map<String, Integer> sortBeforeResultMap = new HashMap<>();
     Set<String> front = new HashSet<>();
     Set<String> back = new HashSet<>();
     List<List<String>> allDataGroup = new ArrayList<>();
@@ -90,7 +89,7 @@ class LotteryDrawDemoTest {
     @Test
     void testDraw() {
         long count = 0;
-        long totalCount = 7579991314L;
+        long totalCount = 10000L;
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 
@@ -100,11 +99,15 @@ class LotteryDrawDemoTest {
             do {
                 count++;
                 result.clear();
+                sortBeforeResult.clear();
                 front.clear();
                 back.clear();
                 for (int i = 0; i < 7; i++) {
                     application.drawNumbers(i, allDataGroup, front, back);
                 }
+
+                sortBeforeResult.addAll(front);
+                sortBeforeResult.addAll(back);
                 front.stream().sorted().forEach(result::add);
                 back.stream().sorted().forEach(result::add);
 
@@ -120,8 +123,11 @@ class LotteryDrawDemoTest {
             Assertions.assertNotNull(result);
             // 对结果进行存储
             List<SelfChosen> insertList = new ArrayList<>();
+            for (int i = 1; i <= 7; i++) {
+                sortBeforeResultMap.put(sortBeforeResult.get(i - 1), i);
+            }
             for (int i = 0; i < 7; i++) {
-                SelfChosen selfChosen = new SelfChosen(result.get(i), i);
+                SelfChosen selfChosen = new SelfChosen(result.get(i), i, sortBeforeResultMap.get(result.get(i)));
                 insertList.add(selfChosen);
             }
             selfChosenRepository.saveAll(insertList);

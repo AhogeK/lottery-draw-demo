@@ -26,12 +26,15 @@ public class SelfChosen {
 
     private Integer numberType;
 
+    private Integer sort;
+
     public SelfChosen() {
     }
 
-    public SelfChosen(String number, Integer numberType) {
+    public SelfChosen(String number, Integer numberType, Integer sort) {
         this.number = number;
         this.numberType = numberType;
+        this.sort = sort;
     }
 
     public Long getId() {
@@ -64,5 +67,13 @@ public class SelfChosen {
 
     public void setNumberType(Integer numberType) {
         this.numberType = numberType;
+    }
+
+    public Integer getSort() {
+        return sort;
+    }
+
+    public void setSort(Integer sort) {
+        this.sort = sort;
     }
 }
