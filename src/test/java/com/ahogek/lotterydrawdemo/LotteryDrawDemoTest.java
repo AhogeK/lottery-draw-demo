@@ -58,7 +58,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("05", "14", "18", "33", "34", "04", "07");
+        List<String> firstPrize = List.of("14", "17", "27", "33", "34", "06", "07");
 
         // 先检查是否有历史一等奖
         int check = service.checkFirstPrize(firstPrize);
@@ -89,7 +89,7 @@ class LotteryDrawDemoTest {
     @Test
     void testDraw() {
         long count = 0;
-        long totalCount = 10000L;
+        long totalCount = 5302646993L;
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 

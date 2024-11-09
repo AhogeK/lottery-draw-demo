@@ -44,13 +44,17 @@ public class LotteryDrawDemoApplication {
                         DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 if (lotteryDateRepository.countByLotteryDrawTime(date) == 0) {
                     List<LotteryData> insertList = new ArrayList<>();
+                    Map<String, Integer> map = new HashMap<>();
+                    for (int i = 8; i < itemNumbers.size(); i++) {
+                        map.put(itemNumbers.get(i), i - 7);
+                    }
                     for (int i = 1; i < 8; i++) {
                         LotteryData lotteryDrawNumber = new LotteryData();
                         lotteryDrawNumber.setLotteryDrawNumber(itemNumbers.get(i));
                         lotteryDrawNumber.setLotteryDrawTime(date);
                         lotteryDrawNumber.setLotteryDrawNumberType(i - 1);
                         if (itemNumbers.size() > 8) {
-                            lotteryDrawNumber.setSort(Integer.parseInt(itemNumbers.get(i + 7)));
+                            lotteryDrawNumber.setSort(map.get(itemNumbers.get(i)));
                         } else {
                             lotteryDrawNumber.setSort(i);
                         }
