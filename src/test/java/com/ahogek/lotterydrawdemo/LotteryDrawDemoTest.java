@@ -17,7 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 用于测试是否可以抽到一等奖
@@ -58,7 +60,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("14", "17", "27", "33", "34", "06", "07");
+        List<String> firstPrize = List.of("02", "03", "04", "21", "26", "02", "03");
 
         // 先检查是否有历史一等奖
         int check = service.checkFirstPrize(firstPrize);
@@ -88,6 +90,17 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDraw() {
+        // 先判断今天有没有抽过，抽过的不进行操作直接结束
+        AtomicBoolean alreadyDraw = new AtomicBoolean(false);
+        selfChosenRepository.findTopByOrderByDrawTimeDesc().ifPresent(selfChosen -> {
+            if (selfChosen.getDrawTime().isEqual(LocalDate.now())) {
+                System.out.println("今天已经抽过了!");
+                alreadyDraw.set(true);
+            }
+        });
+        if (alreadyDraw.get()) {
+            return;
+        }
         long count = 0;
         long totalCount = 5302646993L;
         long updateInterval = totalCount / 10000;
