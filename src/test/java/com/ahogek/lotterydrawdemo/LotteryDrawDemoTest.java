@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -90,6 +91,14 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDraw() {
+        // 判断如果不是周一周三周六则不进行抽奖
+        LocalDate today = LocalDate.now();
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+        boolean isDrawDay = dayOfWeek == DayOfWeek.MONDAY || dayOfWeek == DayOfWeek.WEDNESDAY || dayOfWeek == DayOfWeek.SATURDAY;
+        if (!isDrawDay) {
+            System.out.println("今天不是抽奖日！");
+            return;
+        }
         // 先判断今天有没有抽过，抽过的不进行操作直接结束
         AtomicBoolean alreadyDraw = new AtomicBoolean(false);
         selfChosenRepository.findTopByOrderByDrawTimeDesc().ifPresent(selfChosen -> {
