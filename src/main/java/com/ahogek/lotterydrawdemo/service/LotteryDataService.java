@@ -1,6 +1,7 @@
 package com.ahogek.lotterydrawdemo.service;
 
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
+import com.ahogek.lotterydrawdemo.entity.PrizeCheckResult;
 
 import java.util.List;
 
@@ -15,4 +16,6 @@ public interface LotteryDataService {
     List<LotteryData> findAll();
 
     int checkFirstPrize(List<String> firstPrize);
+
+    PrizeCheckResult checkAllPrizes(List<String> numbers);
 }

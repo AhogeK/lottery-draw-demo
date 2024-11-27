@@ -1,6 +1,7 @@
 package com.ahogek.lotterydrawdemo;
 
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
+import com.ahogek.lotterydrawdemo.entity.PrizeCheckResult;
 import com.ahogek.lotterydrawdemo.entity.SelfChosen;
 import com.ahogek.lotterydrawdemo.repository.SelfChosenRepository;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
@@ -61,16 +62,10 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("02", "03", "04", "21", "26", "02", "03");
+        List<String> firstPrize = List.of("06", "12", "19", "34", "35", "01", "09");
 
-        // 先检查是否有历史一等奖
-        int check = service.checkFirstPrize(firstPrize);
-        if (check > 0) {
-            System.out.println("该号码历史上已经中过一等奖" + check + "次，祝你好运！");
-        } else {
-            System.out.println("该号码历史上还没有中过一等奖，祝你好运！");
-        }
-
+        PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
+        log.info("号码{}的{}", firstPrize, prizeCheckResult);
 
         long count = 0;
         do {

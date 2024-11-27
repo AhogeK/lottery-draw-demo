@@ -1,6 +1,7 @@
 package com.ahogek.lotterydrawdemo.service.impl;
 
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
+import com.ahogek.lotterydrawdemo.entity.PrizeCheckResult;
 import com.ahogek.lotterydrawdemo.repository.LotteryDataRepository;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
 import jakarta.persistence.EntityManager;
@@ -79,5 +80,55 @@ public class LotteryDataServiceImpl implements LotteryDataService {
         var matchingDrawDates = lotteryDataRepository.findMatchingDrawDates(firstPrize);
 
         return matchingDrawDates.size();
+    }
+
+    @Override
+    public PrizeCheckResult checkAllPrizes(List<String> numbers) {
+        if (numbers == null || numbers.size() != 7) {
+            throw new IllegalArgumentException("必须输入7个号码");
+        }
+
+        // 分割蓝球和黄球
+        List<String> blueNumbers = numbers.subList(0, 5);
+        List<String> yellowNumbers = numbers.subList(5, 7);
+
+        // 验证号码格式
+        validateNumbers(blueNumbers, yellowNumbers);
+
+        return PrizeCheckResult.builder()
+                .firstPrize(lotteryDataRepository.findFirstPrizeCount(blueNumbers, yellowNumbers))
+                .secondPrize(lotteryDataRepository.findSecondPrizeCount(blueNumbers, yellowNumbers))
+                .thirdPrize(lotteryDataRepository.findThirdPrizeCount(blueNumbers))
+                .fourthPrize(lotteryDataRepository.findFourthPrizeCount(blueNumbers, yellowNumbers))
+                .fifthPrize(lotteryDataRepository.findFifthPrizeCount(blueNumbers, yellowNumbers))
+                .sixthPrize(lotteryDataRepository.findSixthPrizeCount(blueNumbers, yellowNumbers))
+                .seventhPrize(lotteryDataRepository.findSeventhPrizeCount(blueNumbers))
+                .eighthPrize(lotteryDataRepository.findEighthPrizeCount(blueNumbers, yellowNumbers))
+                .ninthPrize(lotteryDataRepository.findNinthPrizeCount(blueNumbers, yellowNumbers))
+                .build();
+    }
+
+    private void validateNumbers(List<String> blueNumbers, List<String> yellowNumbers) {
+        // 验证蓝球号码
+        for (String blue : blueNumbers) {
+            if (!blue.matches("\\d{2}")) {
+                throw new IllegalArgumentException("蓝球号码格式错误: " + blue);
+            }
+            int num = Integer.parseInt(blue);
+            if (num < 1 || num > 35) {
+                throw new IllegalArgumentException("蓝球号码范围必须在1-35之间: " + blue);
+            }
+        }
+
+        // 验证黄球号码
+        for (String yellow : yellowNumbers) {
+            if (!yellow.matches("\\d{2}")) {
+                throw new IllegalArgumentException("黄球号码格式错误: " + yellow);
+            }
+            int num = Integer.parseInt(yellow);
+            if (num < 1 || num > 12) {
+                throw new IllegalArgumentException("黄球号码范围必须在1-12之间: " + yellow);
+            }
+        }
     }
 }
