@@ -28,6 +28,10 @@ public class SelfChosen {
 
     private Integer sort;
 
+    private Integer prize;
+
+    private Boolean isHistoricalFirst;
+
     public SelfChosen() {
     }
 
@@ -75,5 +79,21 @@ public class SelfChosen {
 
     public void setSort(Integer sort) {
         this.sort = sort;
+    }
+
+    public Integer getPrize() {
+        return prize;
+    }
+
+    public void setPrize(Integer prize) {
+        this.prize = prize;
+    }
+
+    public Boolean getHistoricalFirst() {
+        return isHistoricalFirst;
+    }
+
+    public void setHistoricalFirst(Boolean historicalFirst) {
+        isHistoricalFirst = historicalFirst;
     }
 }
