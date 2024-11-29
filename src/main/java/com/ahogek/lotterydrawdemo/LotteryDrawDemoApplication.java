@@ -70,19 +70,22 @@ public class LotteryDrawDemoApplication {
     public static void groupAllData(List<List<String>> allData, List<LotteryData> all) {
         for (int i = 1; i <= 7; i++) {
             int type = i;
-            allData.add(all.stream().filter(item -> type == item.getSort())
+            List<String> list = new ArrayList<>(all.stream().filter(item -> type == item.getSort())
                     .map(LotteryData::getLotteryDrawNumber).toList());
+            Collections.shuffle(list);
+            allData.add(list);
         }
     }
 
     public static void groupSelfChosenData(List<List<String>> allDataGroup, List<SelfChosen> all) {
-        if (all.isEmpty()) {
-            return;
-        }
+        if (all.isEmpty()) return;
+
         for (int i = 0; i < 7; i++) {
             int type = i;
-            allDataGroup.add(all.stream().filter(item -> type == item.getSort() - 1)
+            List<String> list = new ArrayList<>(all.stream().filter(item -> type == item.getSort() - 1)
                     .map(SelfChosen::getNumber).toList());
+            Collections.shuffle(list);
+            allDataGroup.get(i).addAll(list);
         }
     }
 
@@ -174,6 +177,7 @@ public class LotteryDrawDemoApplication {
     }
 
     public void drawNumbers(int i, List<List<String>> allDataGroup, Set<String> front, Set<String> back) {
+        Collections.shuffle(allDataGroup.get(i));
         if (i < 5) {
             do {
                 int index = this.random.nextInt(allDataGroup.get(i).size());
