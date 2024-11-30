@@ -177,7 +177,6 @@ public class LotteryDrawDemoApplication {
     }
 
     public void drawNumbers(int i, List<List<String>> allDataGroup, Set<String> front, Set<String> back) {
-        Collections.shuffle(allDataGroup.get(i));
         if (i < 5) {
             do {
                 int index = this.random.nextInt(allDataGroup.get(i).size());
