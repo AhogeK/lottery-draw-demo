@@ -10,7 +10,10 @@ import org.hibernate.service.spi.ServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author AhogeK ahogek@gmail.com
@@ -95,16 +98,26 @@ public class LotteryDataServiceImpl implements LotteryDataService {
         // 验证号码格式
         validateNumbers(blueNumbers, yellowNumbers);
 
+        Map<String, Object> firstPrizeResult = lotteryDataRepository.findFirstPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> secondPrizeResult = lotteryDataRepository.findSecondPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> thirdPrizeResult = lotteryDataRepository.findThirdPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> fourthPrizeResult = lotteryDataRepository.findFourthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> fifthPrizeResult = lotteryDataRepository.findFifthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> sixthPrizeResult = lotteryDataRepository.findSixthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> seventhPrizeResult = lotteryDataRepository.findSeventhPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> eighthPrizeResult = lotteryDataRepository.findEighthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> ninthPrizeResult = lotteryDataRepository.findNinthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+
         return PrizeCheckResult.builder()
-                .firstPrize(lotteryDataRepository.findFirstPrizeCount(blueNumbers, yellowNumbers))
-                .secondPrize(lotteryDataRepository.findSecondPrizeCount(blueNumbers, yellowNumbers))
-                .thirdPrize(lotteryDataRepository.findThirdPrizeCount(blueNumbers))
-                .fourthPrize(lotteryDataRepository.findFourthPrizeCount(blueNumbers, yellowNumbers))
-                .fifthPrize(lotteryDataRepository.findFifthPrizeCount(blueNumbers, yellowNumbers))
-                .sixthPrize(lotteryDataRepository.findSixthPrizeCount(blueNumbers, yellowNumbers))
-                .seventhPrize(lotteryDataRepository.findSeventhPrizeCount(blueNumbers))
-                .eighthPrize(lotteryDataRepository.findEighthPrizeCount(blueNumbers, yellowNumbers))
-                .ninthPrize(lotteryDataRepository.findNinthPrizeCount(blueNumbers, yellowNumbers))
+                .firstPrize(getCount(firstPrizeResult), getLastDate(firstPrizeResult))
+                .secondPrize(getCount(secondPrizeResult), getLastDate(secondPrizeResult))
+                .thirdPrize(getCount(thirdPrizeResult), getLastDate(thirdPrizeResult))
+                .fourthPrize(getCount(fourthPrizeResult), getLastDate(fourthPrizeResult))
+                .fifthPrize(getCount(fifthPrizeResult), getLastDate(fifthPrizeResult))
+                .sixthPrize(getCount(sixthPrizeResult), getLastDate(sixthPrizeResult))
+                .seventhPrize(getCount(seventhPrizeResult), getLastDate(seventhPrizeResult))
+                .eighthPrize(getCount(eighthPrizeResult), getLastDate(eighthPrizeResult))
+                .ninthPrize(getCount(ninthPrizeResult), getLastDate(ninthPrizeResult))
                 .build();
     }
 
@@ -130,5 +143,19 @@ public class LotteryDataServiceImpl implements LotteryDataService {
                 throw new IllegalArgumentException("黄球号码范围必须在1-12之间: " + yellow);
             }
         }
+    }
+
+    private Integer getCount(Map<String, Object> result) {
+        return Optional.ofNullable(result.get("count"))
+                .map(Long.class::cast)
+                .map(Math::toIntExact)
+                .orElse(0);
+    }
+
+    private LocalDate getLastDate(Map<String, Object> result) {
+        if (result.get("lastDate") instanceof LocalDate date) {
+            return date;
+        }
+        return null;
     }
 }

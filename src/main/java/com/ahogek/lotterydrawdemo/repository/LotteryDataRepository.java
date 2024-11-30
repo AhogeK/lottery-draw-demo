@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author AhogeK ahogek@gmail.com
@@ -25,166 +26,199 @@ public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> 
 
     // 一等奖:前区5个+后区2个全中
     @Query("""
-                SELECT COUNT(DISTINCT l.lotteryDrawTime)
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
                 FROM LotteryData l
                 GROUP BY l.lotteryDrawTime
                 HAVING SUM(CASE
                     WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 5
                 AND SUM(CASE
                     WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 2
+            ) dates
             """)
-    Integer findFirstPrizeCount(@Param("frontNumbers") List<String> frontNumbers,
-                                @Param("backNumbers") List<String> backNumbers);
+    Map<String, Object> findFirstPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                       @Param("backNumbers") List<String> backNumbers);
 
     // 二等奖:前区5个+后区1个
     @Query("""
-                SELECT COUNT(DISTINCT l.lotteryDrawTime)
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
                 FROM LotteryData l
                 GROUP BY l.lotteryDrawTime
                 HAVING SUM(CASE
                     WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 5
                 AND SUM(CASE
                     WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 1
+            ) dates
             """)
-    Integer findSecondPrizeCount(@Param("frontNumbers") List<String> frontNumbers,
-                                 @Param("backNumbers") List<String> backNumbers);
+    Map<String, Object> findSecondPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                        @Param("backNumbers") List<String> backNumbers);
 
-    // 三等奖:前区5个
+    // 三等奖：前区5个，但排除一等奖和二等奖
     @Query("""
-                SELECT COUNT(DISTINCT l.lotteryDrawTime)
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
                 FROM LotteryData l
-                WHERE l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers
                 GROUP BY l.lotteryDrawTime
-                HAVING COUNT(*) = 5
+                HAVING SUM(CASE
+                    WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 5
+                AND SUM(CASE
+                    WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 0
+            ) dates
             """)
-    Integer findThirdPrizeCount(@Param("frontNumbers") List<String> frontNumbers);
+    Map<String, Object> findThirdPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                       @Param("backNumbers") List<String> backNumbers);
+
 
     // 四等奖:前区4个+后区2个
     @Query("""
-                SELECT COUNT(DISTINCT l.lotteryDrawTime)
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
                 FROM LotteryData l
                 GROUP BY l.lotteryDrawTime
                 HAVING SUM(CASE
                     WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 4
                 AND SUM(CASE
                     WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 2
+            ) dates
             """)
-    Integer findFourthPrizeCount(@Param("frontNumbers") List<String> frontNumbers,
-                                 @Param("backNumbers") List<String> backNumbers);
+    Map<String, Object> findFourthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                        @Param("backNumbers") List<String> backNumbers);
+
 
     // 五等奖:前区4个+后区1个
     @Query("""
-                SELECT COUNT(DISTINCT l.lotteryDrawTime)
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
                 FROM LotteryData l
                 GROUP BY l.lotteryDrawTime
                 HAVING SUM(CASE
                     WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 4
                 AND SUM(CASE
                     WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 1
+            ) dates
             """)
-    Integer findFifthPrizeCount(@Param("frontNumbers") List<String> frontNumbers,
-                                @Param("backNumbers") List<String> backNumbers);
+    Map<String, Object> findFifthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                       @Param("backNumbers") List<String> backNumbers);
 
     // 六等奖:前区3个+后区2个
     @Query("""
-                SELECT COUNT(DISTINCT l.lotteryDrawTime)
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
                 FROM LotteryData l
                 GROUP BY l.lotteryDrawTime
                 HAVING SUM(CASE
                     WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 3
                 AND SUM(CASE
                     WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 2
+            ) dates
             """)
-    Integer findSixthPrizeCount(@Param("frontNumbers") List<String> frontNumbers,
-                                @Param("backNumbers") List<String> backNumbers);
+    Map<String, Object> findSixthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                       @Param("backNumbers") List<String> backNumbers);
 
-    // 七等奖:前区4个
+
+    // 七等奖：前区4个，但排除四等奖和五等奖
     @Query("""
-                SELECT COUNT(DISTINCT l.lotteryDrawTime)
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
                 FROM LotteryData l
-                WHERE l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers
                 GROUP BY l.lotteryDrawTime
-                HAVING COUNT(*) = 4
+                HAVING SUM(CASE
+                    WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 4
+                AND SUM(CASE
+                    WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 0
+            ) dates
             """)
-    Integer findSeventhPrizeCount(@Param("frontNumbers") List<String> frontNumbers);
+    Map<String, Object> findSeventhPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                         @Param("backNumbers") List<String> backNumbers);
 
-
-    // 八等奖: 前区3个+后区1个 或 前区2个+后区2个
-    @Query(value = """
-                SELECT COUNT(DISTINCT temp.drawTime)
-                FROM (
-                    SELECT l.lottery_draw_time AS drawTime
-                    FROM lottery_data l
-                    GROUP BY l.lottery_draw_time
-                    HAVING SUM(IF(l.lottery_draw_number_type <= 4
-                                 AND l.lottery_draw_number IN :frontNumbers, 1, 0)) = 3
-                       AND SUM(IF(l.lottery_draw_number_type > 4
-                                 AND l.lottery_draw_number IN :backNumbers, 1, 0)) = 1
-            
-                    UNION ALL
-            
-                    SELECT l.lottery_draw_time AS drawTime
-                    FROM lottery_data l
-                    GROUP BY l.lottery_draw_time
-                    HAVING SUM(IF(l.lottery_draw_number_type <= 4
-                                 AND l.lottery_draw_number IN :frontNumbers, 1, 0)) = 2
-                       AND SUM(IF(l.lottery_draw_number_type > 4
-                                 AND l.lottery_draw_number IN :backNumbers, 1, 0)) = 2
-                ) temp
-            """, nativeQuery = true)
-    Integer findEighthPrizeCount(@Param("frontNumbers") List<String> frontNumbers,
-                                 @Param("backNumbers") List<String> backNumbers);
-
-    // 九等奖: 前区3个 或 前区1个+后区2个 或 前区2个+后区1个 或 后区2个
-    @Query(value = """
-                WITH matched_times AS (
-                    SELECT DISTINCT drawTime
-                    FROM (
-                        -- 前区3个
-                        SELECT
-                            l.lottery_draw_time AS drawTime
-                        FROM lottery_data l
-                        WHERE l.lottery_draw_number_type <= 4
-                        GROUP BY l.lottery_draw_time
-                        HAVING SUM(IF(l.lottery_draw_number IN :frontNumbers, 1, 0)) = 3
-            
-                        UNION ALL
-            
-                        -- 前区1个+后区2个
-                        SELECT
-                            l.lottery_draw_time AS drawTime
-                        FROM lottery_data l
-                        GROUP BY l.lottery_draw_time
-                        HAVING SUM(IF(l.lottery_draw_number_type <= 4
-                            AND l.lottery_draw_number IN :frontNumbers, 1, 0)) = 1
-                           AND SUM(IF(l.lottery_draw_number_type > 4
-                            AND l.lottery_draw_number IN :backNumbers, 1, 0)) = 2
-            
-                        UNION ALL
-            
-                        -- 前区2个+后区1个
-                        SELECT
-                            l.lottery_draw_time AS drawTime
-                        FROM lottery_data l
-                        GROUP BY l.lottery_draw_time
-                        HAVING SUM(IF(l.lottery_draw_number_type <= 4
-                            AND l.lottery_draw_number IN :frontNumbers, 1, 0)) = 2
-                           AND SUM(IF(l.lottery_draw_number_type > 4
-                            AND l.lottery_draw_number IN :backNumbers, 1, 0)) = 1
-            
-                        UNION ALL
-            
-                        -- 后区2个
-                        SELECT
-                            l.lottery_draw_time AS drawTime
-                        FROM lottery_data l
-                        WHERE l.lottery_draw_number_type > 4
-                        GROUP BY l.lottery_draw_time
-                        HAVING SUM(IF(l.lottery_draw_number IN :backNumbers, 1, 0)) = 2
-                    ) all_matches
+    // 八等奖：转换为JPQL，排除更高奖项
+    @Query("""
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
+                FROM LotteryData l
+                GROUP BY l.lotteryDrawTime
+                HAVING (
+                    (SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 3
+                    AND SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 1)
+                    OR
+                    (SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 2
+                    AND SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 2)
                 )
-                SELECT COUNT(*) FROM matched_times
-            """, nativeQuery = true)
-    Integer findNinthPrizeCount(@Param("frontNumbers") List<String> frontNumbers,
-                                @Param("backNumbers") List<String> backNumbers);
+            ) dates
+            """)
+    Map<String, Object> findEighthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                        @Param("backNumbers") List<String> backNumbers);
+
+    // 九等奖：转换为JPQL，排除更高奖项
+    @Query("""
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
+                FROM LotteryData l
+                GROUP BY l.lotteryDrawTime
+                HAVING (
+                    (SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 3
+                    AND SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 0)
+                    OR
+                    (SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 1
+                    AND SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 2)
+                    OR
+                    (SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 2
+                    AND SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 1)
+                    OR
+                    (SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 0
+                    AND SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 2)
+                )
+            ) dates
+            """)
+    Map<String, Object> findNinthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
+                                                       @Param("backNumbers") List<String> backNumbers);
 }

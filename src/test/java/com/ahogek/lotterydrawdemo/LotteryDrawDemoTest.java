@@ -63,7 +63,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("01", "17", "20", "29", "34", "07", "08");
+        List<String> firstPrize = List.of("02", "07", "11", "25", "35", "07", "12");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         log.info("号码{}的{}", firstPrize, prizeCheckResult);
