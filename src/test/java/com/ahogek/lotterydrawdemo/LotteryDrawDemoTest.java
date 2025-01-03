@@ -33,7 +33,8 @@ import java.util.stream.Collectors;
 @SpringBootTest
 class LotteryDrawDemoTest {
 
-    private static final Logger log = LoggerFactory.getLogger(LotteryDrawDemoTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LotteryDrawDemoTest.class);
+
     @Autowired
     LotteryDataService service;
 
@@ -63,10 +64,10 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("02", "07", "11", "25", "35", "07", "12");
+        List<String> firstPrize = List.of("05", "18", "24", "32", "34", "02", "03");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
-        log.info("号码{}的{}", firstPrize, prizeCheckResult);
+        LOG.info("号码{}的{}", firstPrize, prizeCheckResult);
 
         long count = 0;
         do {
@@ -161,7 +162,7 @@ class LotteryDrawDemoTest {
         Assertions.assertDoesNotThrow(() -> {
             JSONObject nextPage = manager.getNextPage(1);
             Assertions.assertNotNull(nextPage);
-            log.info("{}", nextPage);
+            LOG.info("{}", nextPage);
         });
     }
 
@@ -171,7 +172,7 @@ class LotteryDrawDemoTest {
                 .collect(Collectors.groupingBy(LotteryData::getLotteryDrawTime));
         List<SelfChosen> allSelfChosen = selfChosenRepository.findAllByPrizeIsNull();
         if (allSelfChosen.isEmpty()) {
-            log.warn("暂且没有自选号码数据");
+            LOG.warn("暂且没有自选号码数据");
             return;
         }
         Map<LocalDate, List<SelfChosen>> groupedByDate = allSelfChosen.stream()
@@ -188,7 +189,7 @@ class LotteryDrawDemoTest {
                     .map(SelfChosen::getNumber).toList();
             List<LotteryData> drawDayNumbers = allLotteryDataByDate.get(drawTime);
             if (drawDayNumbers == null || drawDayNumbers.isEmpty()) {
-                log.warn("{}没有开奖记录", drawTime);
+                LOG.warn("{}没有开奖记录", drawTime);
                 continue;
             }
 
