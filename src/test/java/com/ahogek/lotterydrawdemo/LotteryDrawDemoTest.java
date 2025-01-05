@@ -64,7 +64,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("05", "18", "24", "32", "34", "02", "03");
+        List<String> firstPrize = List.of("19", "21", "22", "28", "32", "06", "09");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         LOG.info("号码{}的{}", firstPrize, prizeCheckResult);
@@ -101,6 +101,9 @@ class LotteryDrawDemoTest {
         selfChosenRepository.findTopByOrderByDrawTimeDesc().ifPresent(selfChosen -> {
             if (selfChosen.getDrawTime().isEqual(LocalDate.now())) {
                 System.out.println("今天已经抽过了!");
+                // 输出抽过的号码
+                List<Integer> drawnNumbers = selfChosenRepository.findNumbersByDrawTimeOrderByNumberType(LocalDate.now());
+                System.out.println(drawnNumbers);
                 alreadyDraw.set(true);
             }
         });
