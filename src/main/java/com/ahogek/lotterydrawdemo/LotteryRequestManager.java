@@ -32,11 +32,11 @@ public class LotteryRequestManager {
     private static final Logger LOG = LoggerFactory.getLogger(LotteryRequestManager.class);
     private final OkHttpClient client;
     private final String baseUrl;
-    private int pageSize;
     private final int gameNo;
     private final int provinceId;
     private final int isVerify;
     private final LotteryDataService lotteryDataService;
+    private int pageSize;
     private int pageNo;
     private int pages = 1;
 
@@ -56,45 +56,66 @@ public class LotteryRequestManager {
         List<LotteryData> all = lotteryDataService.findAll();
         if (all.isEmpty()) {
             List<LotteryData> insertData = new ArrayList<>();
-            // 初始化
-            do {
-                JSONObject response = getNextPage(null);
-
-                JSONArray list = response.getJSONObject("value").getJSONArray("list");
-                for (int i = 0; i < list.size(); i++) {
-                    JSONObject data = list.getJSONObject(i);
-                    String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
-                    String[] lotteryUnsortDrawresult = data.getString("lotteryUnsortDrawresult").split(" ");
-                    Map<String, Integer> frontMap = new HashMap<>();
-                    Map<String, Integer> backMap = new HashMap<>();
-                    if (lotteryUnsortDrawresult.length == 7) {
-                        for (int j = 0; j < 7; j++) {
-                            if (j < 5) {
-                                frontMap.put(lotteryUnsortDrawresult[j], j + 1);
-                            } else {
-                                backMap.put(lotteryUnsortDrawresult[j], j + 1);
-                            }
-                        }
-                    }
-                    for (int j = 0; j < 7; j++) {
-                        LotteryData lotteryData = new LotteryData();
-                        lotteryData.setLotteryDrawTime(LocalDate.ofInstant(data.getDate("lotteryDrawTime").toInstant(), ZoneId.systemDefault()));
-                        lotteryData.setLotteryDrawNumber(drawNumbers[j]);
-                        lotteryData.setLotteryDrawNumberType(j);
-                        if (lotteryUnsortDrawresult.length == 7) {
-                            if (j < 5) {
-                                lotteryData.setSort(frontMap.get(drawNumbers[j]));
-                            } else {
-                                lotteryData.setSort(backMap.get(drawNumbers[j]));
-                            }
-                        } else {
-                            lotteryData.setSort(j + 1);
-                        }
-                        insertData.add(lotteryData);
-                    }
-                }
-            } while (hasNextPage());
+            fetchAndProcessData(insertData);
             lotteryDataService.batchInsert(insertData);
+        }
+    }
+
+    private void fetchAndProcessData(List<LotteryData> insertData) throws IOException {
+        do {
+            JSONObject response = getNextPage(null);
+            JSONArray list = response.getJSONObject("value").getJSONArray("list");
+            processLotteryDataList(list, insertData);
+        } while (hasNextPage());
+    }
+
+    private void processLotteryDataList(JSONArray list, List<LotteryData> insertData) {
+        for (int i = 0; i < list.size(); i++) {
+            JSONObject data = list.getJSONObject(i);
+            String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
+            String[] lotteryUnsortedDrawResult = data.getString("lotteryUnsortDrawresult").split(" ");
+            Map<String, Integer> frontMap = new HashMap<>();
+            Map<String, Integer> backMap = new HashMap<>();
+            if (lotteryUnsortedDrawResult.length == 7) {
+                populateMaps(frontMap, backMap, lotteryUnsortedDrawResult);
+            }
+            processDrawNumbers(drawNumbers, data, frontMap, backMap, insertData);
+        }
+    }
+
+    private void populateMaps(Map<String, Integer> frontMap, Map<String, Integer> backMap, String[] lotteryUnsortedDrawResult) {
+        for (int j = 0; j < 7; j++) {
+            if (j < 5) {
+                frontMap.put(lotteryUnsortedDrawResult[j], j + 1);
+            } else {
+                backMap.put(lotteryUnsortedDrawResult[j], j + 1);
+            }
+        }
+    }
+
+    private void processDrawNumbers(String[] drawNumbers, JSONObject data, Map<String, Integer> frontMap, Map<String, Integer> backMap, List<LotteryData> insertData) {
+        for (int j = 0; j < 7; j++) {
+            LotteryData lotteryData = createLotteryData(data, drawNumbers[j], j, frontMap, backMap);
+            insertData.add(lotteryData);
+        }
+    }
+
+    private LotteryData createLotteryData(JSONObject data, String drawNumber, int index, Map<String, Integer> frontMap, Map<String, Integer> backMap) {
+        LotteryData lotteryData = new LotteryData();
+        lotteryData.setLotteryDrawTime(LocalDate.ofInstant(data.getDate("lotteryDrawTime").toInstant(), ZoneId.systemDefault()));
+        lotteryData.setLotteryDrawNumber(drawNumber);
+        lotteryData.setLotteryDrawNumberType(index);
+        lotteryData.setSort(getSort(index, frontMap, backMap, drawNumber));
+        return lotteryData;
+    }
+
+    private int getSort(int index, Map<String, Integer> frontMap, Map<String, Integer> backMap, String drawNumber) {
+        if (frontMap != null && !frontMap.isEmpty() && index < 5) {
+            return frontMap.get(drawNumber);
+        } else if (backMap != null && !backMap.isEmpty() && index >= 5) {
+            return backMap.get(drawNumber);
+        } else {
+            return index + 1;
         }
     }
 
