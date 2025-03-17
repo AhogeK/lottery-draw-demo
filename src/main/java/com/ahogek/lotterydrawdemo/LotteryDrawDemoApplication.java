@@ -35,7 +35,10 @@ public class LotteryDrawDemoApplication {
         SpringApplication.run(LotteryDrawDemoApplication.class, args);
     }
 
-    private static void checkNewInputDrawNumber(LotteryDataRepository lotteryDateRepository, List<List<String>> inputNewDrawNumber) {
+    private static void checkNewInputDrawNumber(LotteryDataRepository lotteryDateRepository,
+                                                List<List<String>> inputNewDrawNumber,
+                                                Map<String, Integer> frontMap,
+                                                Map<String, Integer> backMap) {
         if (inputNewDrawNumber != null && !inputNewDrawNumber.isEmpty()) {
             // 遍历 inputNewDrawNumber 集合
             inputNewDrawNumber.forEach(itemNumbers -> {
@@ -44,17 +47,17 @@ public class LotteryDrawDemoApplication {
                         DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 if (lotteryDateRepository.countByLotteryDrawTime(date) == 0) {
                     List<LotteryData> insertList = new ArrayList<>();
-                    Map<String, Integer> map = new HashMap<>();
-                    for (int i = 8; i < itemNumbers.size(); i++) {
-                        map.put(itemNumbers.get(i), i - 7);
-                    }
                     for (int i = 1; i < 8; i++) {
                         LotteryData lotteryDrawNumber = new LotteryData();
                         lotteryDrawNumber.setLotteryDrawNumber(itemNumbers.get(i));
                         lotteryDrawNumber.setLotteryDrawTime(date);
                         lotteryDrawNumber.setLotteryDrawNumberType(i - 1);
-                        if (itemNumbers.size() > 8) {
-                            lotteryDrawNumber.setSort(map.get(itemNumbers.get(i)));
+                        if (!frontMap.isEmpty() && !backMap.isEmpty()) {
+                            if (i <= 5) {
+                                lotteryDrawNumber.setSort(frontMap.get(itemNumbers.get(i)));
+                            } else {
+                                lotteryDrawNumber.setSort(backMap.get(itemNumbers.get(i)));
+                            }
                         } else {
                             lotteryDrawNumber.setSort(i);
                         }
@@ -130,6 +133,8 @@ public class LotteryDrawDemoApplication {
                     JSONObject response = request.getNextPage(Math.toIntExact(count));
                     List<List<String>> inputNewDrawNumber = new ArrayList<>();
                     JSONArray list = response.getJSONObject("value").getJSONArray("list");
+                    Map<String, Integer> frontMap = new HashMap<>();
+                    Map<String, Integer> backMap = new HashMap<>();
                     for (int i = 0; i < list.size(); i++) {
                         JSONObject data = list.getJSONObject(i);
                         String[] drawNumbers = data.getString("lotteryDrawResult").split(" ");
@@ -139,12 +144,18 @@ public class LotteryDrawDemoApplication {
                                 ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                         item.addAll(Arrays.asList(drawNumbers).subList(0, 7));
                         if (unsortDrawResult.length == 7) {
-                            item.addAll(Arrays.asList(unsortDrawResult));
+                            for (int j = 0; j < 7; j++) {
+                                if (j < 5) {
+                                    frontMap.put(unsortDrawResult[j], j + 1);
+                                } else {
+                                    backMap.put(unsortDrawResult[j], j + 1);
+                                }
+                            }
                         }
                         inputNewDrawNumber.add(item);
                     }
                     inputNewDrawNumber = inputNewDrawNumber.reversed();
-                    checkNewInputDrawNumber(lotteryDateRepository, inputNewDrawNumber);
+                    checkNewInputDrawNumber(lotteryDateRepository, inputNewDrawNumber, frontMap, backMap);
                 }
             }
 

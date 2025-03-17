@@ -50,9 +50,10 @@ class LotteryDrawDemoTest {
     LotteryRequestManager manager;
 
     List<LotteryData> all = new ArrayList<>();
-    List<String> result = new ArrayList<>((int) (7 / 0.75f + 1));
-    List<String> sortBeforeResult = new ArrayList<>((int) (7 / 0.75f + 1));
-    Map<String, Integer> sortBeforeResultMap = new HashMap<>();
+    List<String> result = new ArrayList<>();
+    List<String> sortBeforeResult = new ArrayList<>();
+    Map<String, Integer> sortBeforeFrontResultMap = new HashMap<>();
+    Map<String, Integer> sortBeforeBackResultMap = new HashMap<>();
     Set<String> front = new HashSet<>();
     Set<String> back = new HashSet<>();
     List<List<String>> allDataGroup = new ArrayList<>();
@@ -66,7 +67,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("19", "21", "22", "28", "32", "06", "09");
+        List<String> firstPrize = List.of("09", "12", "17", "28", "35", "07", "09");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         LOG.info("号码{}的{}", firstPrize, prizeCheckResult);
@@ -113,7 +114,7 @@ class LotteryDrawDemoTest {
             return;
         }
         long count = 0;
-        long totalCount = 5302646993L;
+        long totalCount = 757520999;
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 
@@ -148,10 +149,19 @@ class LotteryDrawDemoTest {
             // 对结果进行存储
             List<SelfChosen> insertList = new ArrayList<>();
             for (int i = 1; i <= 7; i++) {
-                sortBeforeResultMap.put(sortBeforeResult.get(i - 1), i);
+                if (i <= 5) {
+                    sortBeforeFrontResultMap.put(sortBeforeResult.get(i - 1), i);
+                } else {
+                    sortBeforeBackResultMap.put(sortBeforeResult.get(i - 1), i);
+                }
             }
             for (int i = 0; i < 7; i++) {
-                SelfChosen selfChosen = new SelfChosen(result.get(i), i, sortBeforeResultMap.get(result.get(i)));
+                SelfChosen selfChosen;
+                if (i < 5) {
+                    selfChosen = new SelfChosen(result.get(i), i, sortBeforeFrontResultMap.get(result.get(i)));
+                } else {
+                    selfChosen = new SelfChosen(result.get(i), i, sortBeforeBackResultMap.get(result.get(i)));
+                }
                 insertList.add(selfChosen);
             }
             selfChosenRepository.saveAll(insertList);
