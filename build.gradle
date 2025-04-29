@@ -1,7 +1,8 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.5'
-	id 'io.spring.dependency-management' version '1.1.4'
+	id 'org.springframework.boot' version '3.4.5'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id "com.github.ben-manes.versions" version "0.52.0"
 }
 
 group = 'com.ahogek'
@@ -17,14 +18,20 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.12'
-	implementation 'com.alibaba.fastjson2:fastjson2:2.0.41'
-	implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0")
+	implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.14'
+	implementation 'com.alibaba.fastjson2:fastjson2:2.0.57'
+	implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.11.0")
 
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'com.mysql:mysql-connector-j:9.2.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+test {
+	testLogging {
+		events "passed", "skipped", "failed", "standardOut", "standardError"
+		exceptionFormat "full"
+		showCauses true
+		showExceptions true
+		showStackTraces true
+	}
 }
