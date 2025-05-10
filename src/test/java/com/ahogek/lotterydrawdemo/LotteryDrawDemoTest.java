@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -67,7 +68,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("04", "10", "15", "20", "34", "04", "07");
+        List<String> firstPrize = List.of("10", "21", "22", "26", "32", "08", "12");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         LOG.info("号码{}的{}", firstPrize, prizeCheckResult);
@@ -114,7 +115,7 @@ class LotteryDrawDemoTest {
             return;
         }
         long count = 0;
-        long totalCount = 757520999;
+        long totalCount = ThreadLocalRandom.current().nextInt(520_999, 757_520_999);
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 
