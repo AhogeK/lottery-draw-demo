@@ -115,7 +115,7 @@ class LotteryDrawDemoTest {
             return;
         }
         long count = 0;
-        long totalCount = ThreadLocalRandom.current().nextInt(520_999, 757_520_999);
+        long totalCount = ThreadLocalRandom.current().nextInt(520_999, 757_520_999 + 1);
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 
