@@ -63,12 +63,15 @@ class LotteryDrawDemoTest {
     void beforeAll() {
         all = service.findAll();
         LotteryDrawDemoApplication.groupAllData(allDataGroup, all);
-        LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAll());
+        /*
+         * 不再将曾经的所有自己的摇奖数据作为随机摇奖的数据,仅对所有大奖数据进行随机摇奖
+         * LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAll());
+         */
     }
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("10", "21", "22", "26", "32", "08", "12");
+        List<String> firstPrize = List.of("01", "12", "13", "29", "34", "02", "10");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         LOG.info("号码{}的{}", firstPrize, prizeCheckResult);
@@ -116,6 +119,7 @@ class LotteryDrawDemoTest {
         }
         long count = 0;
         long totalCount = ThreadLocalRandom.current().nextInt(520_999, 757_520_999 + 1);
+        System.out.println("本次随机次数为：" + totalCount);
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
 
