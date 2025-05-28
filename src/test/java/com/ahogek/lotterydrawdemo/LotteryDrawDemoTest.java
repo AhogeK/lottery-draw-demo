@@ -3,7 +3,10 @@ package com.ahogek.lotterydrawdemo;
 import com.ahogek.lotterydrawdemo.entity.LotteryData;
 import com.ahogek.lotterydrawdemo.entity.PrizeCheckResult;
 import com.ahogek.lotterydrawdemo.entity.SelfChosen;
+import com.ahogek.lotterydrawdemo.entity.SelfChosenWinning;
+import com.ahogek.lotterydrawdemo.repository.LotteryDataRepository;
 import com.ahogek.lotterydrawdemo.repository.SelfChosenRepository;
+import com.ahogek.lotterydrawdemo.repository.SelfChosenWinningRepository;
 import com.ahogek.lotterydrawdemo.service.LotteryDataService;
 import com.ahogek.lotterydrawdemo.util.ProgressBarWithTime;
 import com.alibaba.fastjson2.JSONObject;
@@ -43,6 +46,12 @@ class LotteryDrawDemoTest {
 
     @Autowired
     SelfChosenRepository selfChosenRepository;
+
+    @Autowired
+    LotteryDataRepository lotteryDataRepository;
+
+    @Autowired
+    SelfChosenWinningRepository selfChosenWinningRepository;
 
     @Autowired
     LotteryDrawDemoApplication application;
@@ -282,5 +291,92 @@ class LotteryDrawDemoTest {
         }
 
         selfChosenRepository.saveAll(updateRecords);
+
+        // 同时同步 SelfChosenWinning
+        List<SelfChosenWinning> insertList = new ArrayList<>();
+        for (Map.Entry<LocalDate, List<SelfChosen>> entry : groupedByDate.entrySet()) {
+            LocalDate date = entry.getKey();
+            List<SelfChosen> records = entry.getValue();
+            List<LotteryData> lotteryDataList = allLotteryDataByDate.get(date);
+            if (lotteryDataList == null || lotteryDataList.isEmpty()) {
+                LOG.warn("{}没有中奖，没有需要记录 self_chosen_winning 的数据", date);
+                continue;
+            }
+            List<LotteryData> frontLotteryDataList = lotteryDataList.stream()
+                    .filter(lotteryData -> lotteryData.getLotteryDrawNumberType() <= 4)
+                    .toList();
+            List<LotteryData> backLotteryDataList = lotteryDataList.stream()
+                    .filter(lotteryData -> lotteryData.getLotteryDrawNumberType() > 4)
+                    .toList();
+            List<SelfChosen> winningSelfChosen = records.stream()
+                    .filter(selfChosen -> {
+                        if (selfChosen.getNumberType() <= 4) {
+                            return frontLotteryDataList.stream()
+                                    .anyMatch(lotteryData -> lotteryData.getLotteryDrawNumber().contains(selfChosen.getNumber()));
+                        } else {
+                            return backLotteryDataList.stream()
+                                    .anyMatch(lotteryData -> lotteryData.getLotteryDrawNumber().contains(selfChosen.getNumber()));
+                        }
+                    })
+                    .toList();
+
+            insertList.addAll(winningSelfChosen.stream().map(selfChosen -> new SelfChosenWinning(selfChosen.getId(),
+                            selfChosen.getDrawTime(), selfChosen.getNumber(), selfChosen.getNumberType(), selfChosen.getSort()))
+                    .toList());
+            LOG.info("{}中了{}个号", date, winningSelfChosen.size());
+        }
+
+        if (!insertList.isEmpty())
+            selfChosenWinningRepository.saveAll(insertList);
+    }
+
+    @Test
+    void syncSelfChosenWinningData() {
+        Assertions.assertDoesNotThrow(() -> {
+            if (!selfChosenWinningRepository.findAll().isEmpty()) {
+                LOG.warn("已存在数据，请勿重复同步");
+                return;
+            }
+            // 获取所有自选号码并分组
+            Map<LocalDate, List<SelfChosen>> allSelfChosen = selfChosenRepository.findAll().stream()
+                    .collect(Collectors.groupingBy(SelfChosen::getDrawTime));
+            // 根据日期获取所有彩票数据
+            Map<LocalDate, List<LotteryData>> allLotteryDataByDate = lotteryDataRepository
+                    .findByLotteryDrawTimeIn(allSelfChosen.keySet()).stream()
+                    .collect(Collectors.groupingBy(LotteryData::getLotteryDrawTime));
+            if (allLotteryDataByDate.isEmpty()) {
+                LOG.warn("没有彩票数据, 同步结束");
+                return;
+            }
+            List<SelfChosenWinning> insertList = new ArrayList<>();
+            allSelfChosen.forEach((date, selfChosenList) -> {
+                List<LotteryData> lotteryDataList = allLotteryDataByDate.get(date);
+                // 将lotteryDataList分为前后区匹配，numberType 0-4 匹配，5-9 匹配,只要number包含就为winningSelfChosen
+                List<LotteryData> frontLotteryDataList = lotteryDataList.stream()
+                        .filter(lotteryData -> lotteryData.getLotteryDrawNumberType() <= 4)
+                        .toList();
+                List<LotteryData> backLotteryDataList = lotteryDataList.stream()
+                        .filter(lotteryData -> lotteryData.getLotteryDrawNumberType() > 4)
+                        .toList();
+                List<SelfChosen> winningSelfChosen = selfChosenList.stream()
+                        .filter(selfChosen -> {
+                            if (selfChosen.getNumberType() <= 4) {
+                                return frontLotteryDataList.stream()
+                                        .anyMatch(lotteryData -> lotteryData.getLotteryDrawNumber().contains(selfChosen.getNumber()));
+                            } else {
+                                return backLotteryDataList.stream()
+                                        .anyMatch(lotteryData -> lotteryData.getLotteryDrawNumber().contains(selfChosen.getNumber()));
+                            }
+                        })
+                        .toList();
+                // 将匹配的SelfChosen转换为SelfChosenWinning
+                insertList.addAll(winningSelfChosen.stream()
+                        .map(selfChosen -> new SelfChosenWinning(selfChosen.getId(), selfChosen.getDrawTime(),
+                                selfChosen.getNumber(), selfChosen.getNumberType(), selfChosen.getSort()))
+                        .toList());
+            });
+            // 存储到数据库
+            selfChosenWinningRepository.saveAll(insertList);
+        });
     }
 }

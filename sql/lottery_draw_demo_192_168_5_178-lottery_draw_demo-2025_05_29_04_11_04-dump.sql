@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 9.0.1, for macos14.4 (arm64)
+-- MySQL dump 10.13  Distrib 9.3.0, for macos15.2 (arm64)
 --
--- Host: 192.168.50.116    Database: lottery_draw_demo
+-- Host: 192.168.5.178    Database: lottery_draw_demo
 -- ------------------------------------------------------
--- Server version	8.0.40-0ubuntu0.22.04.1
+-- Server version	8.0.42-0ubuntu0.24.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT = @@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS = @@CHARACTER_SET_RESULTS */;
@@ -32,7 +32,7 @@ CREATE TABLE `lottery_data`
     PRIMARY KEY (`id`),
     CONSTRAINT `check_lottery_draw_number_type` CHECK ((`lottery_draw_number_type` in (0, 1, 2, 3, 4, 5, 6)))
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 18586
+  AUTO_INCREMENT = 19090
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='彩票数据';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -59,9 +59,31 @@ CREATE TABLE `self_chosen`
     CONSTRAINT `check_number_type` CHECK ((`number_type` in (0, 1, 2, 3, 4, 5, 6))),
     CONSTRAINT `check_prize` CHECK (((`prize` is null) or ((`prize` >= 0) and (`prize` <= 9))))
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 64
+  AUTO_INCREMENT = 225
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci COMMENT ='个人自选';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `self_chosen_winning`
+--
+
+DROP TABLE IF EXISTS `self_chosen_winning`;
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `self_chosen_winning`
+(
+    `id`          bigint unsigned  NOT NULL AUTO_INCREMENT,
+    `winning_id`  bigint unsigned  NOT NULL COMMENT '中奖单个号码id',
+    `draw_time`   date             NOT NULL,
+    `number`      varchar(2)       NOT NULL,
+    `number_type` tinyint unsigned NOT NULL,
+    `sort`        tinyint unsigned NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 37
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_0900_ai_ci COMMENT ='自选中奖';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE = @OLD_TIME_ZONE */;
 
@@ -73,4 +95,4 @@ CREATE TABLE `self_chosen`
 /*!40101 SET COLLATION_CONNECTION = @OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES = @OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-28 15:47:22
+-- Dump completed on 2025-05-29  4:11:04

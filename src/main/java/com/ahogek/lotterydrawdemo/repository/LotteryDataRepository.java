@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,8 @@ public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> 
     long countByLotteryDrawTime(LocalDate lotteryDrawTime);
 
     LotteryData findTopByOrderByLotteryDrawTimeDesc();
+
+    List<LotteryData> findByLotteryDrawTimeIn(Collection<LocalDate> lotteryDrawTime);
 
     @Query("SELECT l.lotteryDrawTime FROM LotteryData l WHERE l.lotteryDrawNumber IN :numbers " +
             "GROUP BY l.lotteryDrawTime HAVING COUNT(DISTINCT l.lotteryDrawNumberType) = 7")
