@@ -21,4 +21,6 @@ public interface SelfChosenRepository extends JpaRepository<SelfChosen, Long> {
 
     @Query("SELECT s.number FROM SelfChosen s WHERE s.drawTime = :drawTime ORDER BY s.numberType")
     List<Integer> findNumbersByDrawTimeOrderByNumberType(LocalDate drawTime);
+
+    List<SelfChosen> findAllByPrizeNot(int prize);
 }

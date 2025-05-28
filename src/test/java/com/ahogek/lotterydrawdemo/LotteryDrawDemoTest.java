@@ -63,15 +63,58 @@ class LotteryDrawDemoTest {
     void beforeAll() {
         all = service.findAll();
         LotteryDrawDemoApplication.groupAllData(allDataGroup, all);
-        /*
-         * 不再将曾经的所有自己的摇奖数据作为随机摇奖的数据,仅对所有大奖数据进行随机摇奖
-         * LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAll());
-         */
+        // 不再将曾经的所有自己的摇奖数据作为随机摇奖的数据,仅对所有大奖数据进行随机摇奖
+        // LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAllByPrizeNot(0));
+    }
+
+    @Test
+    void testDrawProbability() {
+        List<String> firstPrize = List.of("09", "10", "11", "12", "29", "01", "10");
+
+        int count = 0;
+        for (int i = 0; i < 100; i++) {
+            do {
+                count++;
+                result.clear();
+                front.clear();
+                back.clear();
+                for (int j = 0; j < 7; j++) {
+                    application.drawNumbers(j, allDataGroup, front, back);
+                }
+                front.stream().sorted().forEach(result::add);
+                back.stream().sorted().forEach(result::add);
+            } while (!firstPrize.equals(result));
+        }
+
+        Assertions.assertTrue(count > 0);
+        int countA = count;
+        System.out.println("不加自选中奖抽到一等奖100次需要的次数：" + countA);
+        count = 0;
+        LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAllByPrizeNot(0));
+        for (int i = 0; i < 100; i++) {
+            do {
+                count++;
+                result.clear();
+                front.clear();
+                back.clear();
+                for (int j = 0; j < 7; j++) {
+                    application.drawNumbers(j, allDataGroup, front, back);
+                }
+                front.stream().sorted().forEach(result::add);
+                back.stream().sorted().forEach(result::add);
+            } while (!firstPrize.equals(result));
+        }
+        System.out.println("加自选中奖抽到一等奖100次需要的次数：" + count);
+        if (countA < count) {
+            System.out.println("不加自选更容易抽到一等奖");
+        } else {
+            System.out.println("加自选更容易抽到一等奖");
+        }
     }
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("01", "12", "13", "29", "34", "02", "10");
+        List<String> firstPrize = List.of("03", "05", "12", "24", "28", "05", "11");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         LOG.info("号码{}的{}", firstPrize, prizeCheckResult);

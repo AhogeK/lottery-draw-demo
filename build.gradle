@@ -22,7 +22,7 @@ dependencies {
     implementation 'com.alibaba.fastjson2:fastjson2:2.0.57'
     implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.11.0")
 
-    runtimeOnly 'com.mysql:mysql-connector-j:9.2.0'
+    runtimeOnly 'com.mysql:mysql-connector-j:9.3.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
