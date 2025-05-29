@@ -320,8 +320,9 @@ class LotteryDrawDemoTest {
                     })
                     .toList();
 
-            insertList.addAll(winningSelfChosen.stream().map(selfChosen -> new SelfChosenWinning(selfChosen.getId(),
-                            selfChosen.getDrawTime(), selfChosen.getNumber(), selfChosen.getNumberType(), selfChosen.getSort()))
+            insertList.addAll(winningSelfChosen.stream().map(selfChosen ->
+                            new SelfChosenWinning(selfChosen.getId(), selfChosen.getDrawTime(), selfChosen.getNumber(),
+                                    selfChosen.getNumberType(), selfChosen.getSort(), selfChosen.getPrize()))
                     .toList());
             LOG.info("{}中了{}个号", date, winningSelfChosen.size());
         }
@@ -372,7 +373,7 @@ class LotteryDrawDemoTest {
                 // 将匹配的SelfChosen转换为SelfChosenWinning
                 insertList.addAll(winningSelfChosen.stream()
                         .map(selfChosen -> new SelfChosenWinning(selfChosen.getId(), selfChosen.getDrawTime(),
-                                selfChosen.getNumber(), selfChosen.getNumberType(), selfChosen.getSort()))
+                                selfChosen.getNumber(), selfChosen.getNumberType(), selfChosen.getSort(), selfChosen.getPrize()))
                         .toList());
             });
             // 存储到数据库

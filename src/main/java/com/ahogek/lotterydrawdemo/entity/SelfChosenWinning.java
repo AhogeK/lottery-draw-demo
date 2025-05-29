@@ -30,15 +30,19 @@ public class SelfChosenWinning {
 
     private Integer sort;
 
+    private Integer prize;
+
     public SelfChosenWinning() {
     }
 
-    public SelfChosenWinning(Long winningId, LocalDate drawTime, String number, Integer numberType, Integer sort) {
+    public SelfChosenWinning(Long winningId, LocalDate drawTime, String number, Integer numberType, Integer sort,
+                             Integer prize) {
         this.winningId = winningId;
         this.drawTime = drawTime;
         this.number = number;
         this.numberType = numberType;
         this.sort = sort;
+        this.prize = prize;
     }
 
     public Long getId() {

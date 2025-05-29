@@ -79,6 +79,7 @@ CREATE TABLE `self_chosen_winning`
     `number`      varchar(2)       NOT NULL,
     `number_type` tinyint unsigned NOT NULL,
     `sort`        tinyint unsigned NOT NULL,
+    `prize`       tinyint unsigned NOT NULL COMMENT '奖项 0-未中奖 其余数字与奖级一致',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 37
@@ -95,4 +96,4 @@ CREATE TABLE `self_chosen_winning`
 /*!40101 SET COLLATION_CONNECTION = @OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES = @OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-29  4:11:04
+-- Dump completed on 2025-05-29 10:11:04
