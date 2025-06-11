@@ -72,8 +72,14 @@ class LotteryDrawDemoTest {
     void beforeAll() {
         all = service.findAll();
         LotteryDrawDemoApplication.groupAllData(allDataGroup, all);
+
         // 不再将曾经的所有自己的摇奖数据作为随机摇奖的数据,仅对所有大奖数据进行随机摇奖
         // LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAllByPrizeNot(0));
+
+        // 将self_chosen_winning的数据加入allDataGroup中
+        List<Long> ids = selfChosenWinningRepository.findAll().stream().map(SelfChosenWinning::getWinningId)
+                .toList();
+        LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAllById(ids));
     }
 
     @Test
@@ -99,7 +105,10 @@ class LotteryDrawDemoTest {
         int countA = count;
         System.out.println("不加自选中奖抽到一等奖100次需要的次数：" + countA);
         count = 0;
-        LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAllByPrizeNot(0));
+        // 将self_chosen_winning的数据加入allDataGroup中
+        List<Long> ids = selfChosenWinningRepository.findAll().stream().map(SelfChosenWinning::getWinningId)
+                .toList();
+        LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAllById(ids));
         for (int i = 0; i < 100; i++) {
             do {
                 count++;
