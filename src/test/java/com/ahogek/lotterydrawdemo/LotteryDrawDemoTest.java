@@ -84,7 +84,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawProbability() {
-        List<String> firstPrize = List.of("09", "10", "11", "12", "29", "01", "10");
+        List<String> firstPrize = List.of("11", "18", "22", "25", "29", "04", "12");
 
         int count = 0;
         for (int i = 0; i < 100; i++) {
@@ -132,7 +132,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("03", "05", "12", "24", "28", "05", "11");
+        List<String> firstPrize = List.of("11", "18", "22", "25", "29", "04", "12");
 
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         LOG.info("号码{}的{}", firstPrize, prizeCheckResult);
@@ -179,7 +179,8 @@ class LotteryDrawDemoTest {
             return;
         }
         long count = 0;
-        long totalCount = ThreadLocalRandom.current().nextInt(520_999, 757_520_999 + 1);
+        long totalCount = ThreadLocalRandom.current().nextLong(757520999, 7579991314L + 1);
+        // long totalCount = 757_999_1314L;
         System.out.println("本次随机次数为：" + totalCount);
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
