@@ -261,7 +261,7 @@ class LotteryDrawDemoTest {
                 .collect(Collectors.groupingBy(SelfChosen::getDrawTime));
 
         List<SelfChosen> updateRecords = new ArrayList<>();
-
+        int prize = 0;
         // 处理每次的记录
         for (Map.Entry<LocalDate, List<SelfChosen>> entry : groupedByDate.entrySet()) {
             LocalDate drawTime = entry.getKey();
@@ -279,7 +279,7 @@ class LotteryDrawDemoTest {
                     .map(LotteryData::getLotteryDrawNumber).toList();
             // 检查中奖情况
             PrizeCheckResult prizeResult = checkPrizeForNumbers(drawNumbers, numbers);
-            int prize = getHighestPrize(prizeResult);
+            prize = getHighestPrize(prizeResult);
 
             // 如果有中奖检查是否是历史首次中奖
             if (prize > 0) {
@@ -335,6 +335,11 @@ class LotteryDrawDemoTest {
                                     selfChosen.getNumberType(), selfChosen.getSort(), selfChosen.getPrize()))
                     .toList());
             LOG.info("{}中了{}个号", date, winningSelfChosen.size());
+            if (prize == 0) {
+                LOG.info("可惜没有中奖");
+            } else {
+                LOG.info("恭喜你中了{}等奖", prize);
+            }
         }
 
         if (!insertList.isEmpty())
