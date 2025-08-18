@@ -180,7 +180,6 @@ class LotteryDrawDemoTest {
         }
         long count = 0;
         long totalCount = ThreadLocalRandom.current().nextLong(757520999, 7579991314L + 1);
-        // long totalCount = 757_999_1314L;
         System.out.println("本次随机次数为：" + totalCount);
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
