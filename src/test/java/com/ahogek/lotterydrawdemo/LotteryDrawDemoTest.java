@@ -84,7 +84,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawProbability() {
-        List<String> firstPrize = List.of("11", "18", "22", "25", "29", "04", "12");
+        List<String> firstPrize = List.of("06", "11", "26", "33", "35", "08", "10");
 
         int count = 0;
         for (int i = 0; i < 100; i++) {
@@ -131,9 +131,37 @@ class LotteryDrawDemoTest {
     }
 
     @Test
-    void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("11", "18", "22", "25", "29", "04", "12");
+    void getDrawNumber() {
+        List<String> firstPrize = List.of("05", "07", "08", "15", "33", "06", "10");
 
+        long count = 0;
+        for (int i = 0; i < 100; i++) {
+            LOG.info("第{}次摇奖", i + 1);
+            do {
+                count++;
+                result.clear();
+                front.clear();
+                back.clear();
+                for (int j = 0; j < 7; j++) {
+                    application.drawNumbers(j, allDataGroup, front, back);
+                }
+                front.stream().sorted().forEach(result::add);
+                back.stream().sorted().forEach(result::add);
+            } while (!firstPrize.equals(result));
+        }
+        Assertions.assertEquals(firstPrize, result);
+
+        LOG.info("平均次数：{}", count / 100);
+    }
+
+    @Test
+    void testDrawFirstPrize() {
+        List<String> firstPrize = List.of("01", "07", "09", "11", "23", "02", "09");
+
+        firstPrizeInfo(firstPrize);
+    }
+
+    private void firstPrizeInfo(List<String> firstPrize) {
         PrizeCheckResult prizeCheckResult = service.checkAllPrizes(firstPrize);
         LOG.info("号码{}的{}", firstPrize, prizeCheckResult);
 
@@ -179,7 +207,10 @@ class LotteryDrawDemoTest {
             return;
         }
         long count = 0;
-        long totalCount = ThreadLocalRandom.current().nextLong(757520999, 7579991314L + 1);
+        long totalCount = 0;
+        for (int i = 0; i < 7172; i++) {
+            totalCount = ThreadLocalRandom.current().nextLong(757520999, 7579991314L + 1);
+        }
         System.out.println("本次随机次数为：" + totalCount);
         long updateInterval = totalCount / 10000;
         long nextUpdate = updateInterval;
@@ -233,6 +264,8 @@ class LotteryDrawDemoTest {
             selfChosenRepository.saveAll(insertList);
 
             System.out.println("随机摇奖号码为：" + result + "，祝你好运！");
+
+            firstPrizeInfo(result);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
