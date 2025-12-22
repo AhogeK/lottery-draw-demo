@@ -485,8 +485,8 @@ class LotteryDrawDemoTest {
 
         if (!carryOverRecords.isEmpty()) {
             List<SelfChosen> uniqueCarryOver = carryOverRecords.stream()
-                    .filter(record -> !selfChosenRepository.existsByDrawTimeAndNumberAndNumberType(
-                            record.getDrawTime(), record.getNumber(), record.getNumberType())).toList();
+                    .filter(recordSelfChosen -> !selfChosenRepository.existsByDrawTimeAndNumberAndNumberType(
+                            recordSelfChosen.getDrawTime(), recordSelfChosen.getNumber(), recordSelfChosen.getNumberType())).toList();
             if (!uniqueCarryOver.isEmpty()) {
                 selfChosenRepository.saveAll(uniqueCarryOver);
                 LOG.info("Successfully carried over {} number to the next round.", uniqueCarryOver.size());
@@ -501,7 +501,10 @@ class LotteryDrawDemoTest {
             LocalDate date = entry.getKey();
             List<SelfChosen> records = entry.getValue();
 
-            if (records.stream().allMatch(r -> r.getPrize() != null && r.getPrize() == 0)) continue;
+            if (records.stream().allMatch(r -> r.getPrize() != null && r.getPrize() == 0)) {
+                LOG.info("{}没有中奖，没有需要记录 self_chosen_winning 的数据", date);
+                continue;
+            }
 
             List<LotteryData> lotteryDataList = allLotteryDataByDate.get(date);
             if (lotteryDataList == null || lotteryDataList.isEmpty()) {
