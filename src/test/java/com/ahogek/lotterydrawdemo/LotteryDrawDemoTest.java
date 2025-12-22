@@ -421,6 +421,10 @@ class LotteryDrawDemoTest {
                 .collect(Collectors.groupingBy(SelfChosen::getDrawTime));
 
         List<SelfChosen> updateRecords = new ArrayList<>();
+
+        List<SelfChosen> carryOverRecords = new ArrayList<>();
+        LocalDate latestDate = groupedByDate.keySet().stream().max(LocalDate::compareTo).orElse(null);
+
         int prize = 0;
         // 处理每次的记录
         for (Map.Entry<LocalDate, List<SelfChosen>> entry : groupedByDate.entrySet()) {
@@ -457,16 +461,48 @@ class LotteryDrawDemoTest {
                     self.setHistoricalFirst(false);
                     updateRecords.add(self);
                 }
+                LOG.info("Result for {}: No prize.", drawTime);
+
+                if (drawTime.equals(latestDate)) {
+                    LocalDate nextDrawDate = getNextDrawDay(drawTime);
+
+                    List<SelfChosen> nextRound = dayRecords.stream()
+                            .map(old -> {
+                                SelfChosen next = new SelfChosen(old.getNumber(), old.getNumberType(), old.getSort());
+                                next.setDrawTime(nextDrawDate);
+                                next.setPrize(null);
+                                return next;
+                            })
+                            .toList();
+
+                    carryOverRecords.addAll(nextRound);
+                    LOG.info(">> Trigger carry-over: Moving numbers from {} to next draw date {}", drawTime, nextDrawDate);
+                }
             }
         }
 
         selfChosenRepository.saveAll(updateRecords);
+
+        if (!carryOverRecords.isEmpty()) {
+            List<SelfChosen> uniqueCarryOver = carryOverRecords.stream()
+                    .filter(record -> !selfChosenRepository.existsByDrawTimeAndNumberAndNumberType(
+                            record.getDrawTime(), record.getNumber(), record.getNumberType())).toList();
+            if (!uniqueCarryOver.isEmpty()) {
+                selfChosenRepository.saveAll(uniqueCarryOver);
+                LOG.info("Successfully carried over {} number to the next round.", uniqueCarryOver.size());
+            } else {
+                LOG.info("Carry-over records already exist. Skipping");
+            }
+        }
 
         // 同时同步 SelfChosenWinning
         List<SelfChosenWinning> insertList = new ArrayList<>();
         for (Map.Entry<LocalDate, List<SelfChosen>> entry : groupedByDate.entrySet()) {
             LocalDate date = entry.getKey();
             List<SelfChosen> records = entry.getValue();
+
+            if (records.stream().allMatch(r -> r.getPrize() != null && r.getPrize() == 0)) continue;
+
             List<LotteryData> lotteryDataList = allLotteryDataByDate.get(date);
             if (lotteryDataList == null || lotteryDataList.isEmpty()) {
                 LOG.warn("{}没有中奖，没有需要记录 self_chosen_winning 的数据", date);
@@ -497,6 +533,7 @@ class LotteryDrawDemoTest {
             LOG.info("{}中了{}个号", date, winningSelfChosen.size());
             if (prize == 0) {
                 LOG.info("可惜没有中奖");
+                // 核心延续下期逻辑已在上方主循环中通过 carryOverRecords 实现
             } else {
                 LOG.info("恭喜你中了{}等奖", prize);
             }
@@ -504,6 +541,15 @@ class LotteryDrawDemoTest {
 
         if (!insertList.isEmpty())
             selfChosenWinningRepository.saveAll(insertList);
+    }
+
+    private LocalDate getNextDrawDay(LocalDate date) {
+        LocalDate nextDate = date.plusDays(1);
+        while (true) {
+            DayOfWeek day = nextDate.getDayOfWeek();
+            if (day == DayOfWeek.MONDAY || day == DayOfWeek.WEDNESDAY || day == DayOfWeek.SATURDAY) return nextDate;
+            nextDate = nextDate.plusDays(1);
+        }
     }
 
     @Test

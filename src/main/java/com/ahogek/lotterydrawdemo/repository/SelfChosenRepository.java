@@ -23,4 +23,15 @@ public interface SelfChosenRepository extends JpaRepository<SelfChosen, Long> {
     List<Integer> findNumbersByDrawTimeOrderByNumberType(LocalDate drawTime);
 
     List<SelfChosen> findAllByPrizeNot(int prize);
+
+    /**
+     * Check if a record exists with the given draw time, number, and number type.
+     * This is used to prevent duplicate entries when carrying over numbers to the next draw.
+     *
+     * @param drawTime   The date of the draw
+     * @param number     The lottery number string
+     * @param numberType The type/index of the number
+     * @return true if exists, false otherwise
+     */
+    boolean existsByDrawTimeAndNumberAndNumberType(LocalDate drawTime, String number, Integer numberType);
 }
