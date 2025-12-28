@@ -76,9 +76,6 @@ class LotteryDrawDemoTest {
         all = service.findAll();
         LotteryDrawDemoApplication.groupAllData(allDataGroup, all);
 
-        // 不再将曾经的所有自己的摇奖数据作为随机摇奖的数据,仅对所有大奖数据进行随机摇奖
-        // LotteryDrawDemoApplication.groupSelfChosenData(allDataGroup, selfChosenRepository.findAllByPrizeNot(0));
-
         // 将self_chosen_winning的数据加入allDataGroup中
         List<Long> ids = selfChosenWinningRepository.findAll().stream().map(SelfChosenWinning::getWinningId)
                 .toList();
@@ -194,6 +191,9 @@ class LotteryDrawDemoTest {
         if (!isDrawDay) {
             System.out.println("今天不是抽奖日！");
             return;
+        }
+        if (!selfChosenRepository.findAllByPrizeIsNull().isEmpty()) {
+            System.out.println("有未开奖的数据，请先执行syncSelfChosenPrizeData");
         }
         // 先判断今天有没有抽过，抽过的不进行操作直接结束
         AtomicBoolean alreadyDraw = new AtomicBoolean(false);
