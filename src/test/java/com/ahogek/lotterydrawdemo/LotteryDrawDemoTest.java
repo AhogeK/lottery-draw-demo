@@ -501,16 +501,12 @@ class LotteryDrawDemoTest {
             LocalDate date = entry.getKey();
             List<SelfChosen> records = entry.getValue();
 
-            if (records.stream().allMatch(r -> r.getPrize() != null && r.getPrize() == 0)) {
-                LOG.info("{}没有中奖，没有需要记录 self_chosen_winning 的数据", date);
-                continue;
-            }
-
             List<LotteryData> lotteryDataList = allLotteryDataByDate.get(date);
             if (lotteryDataList == null || lotteryDataList.isEmpty()) {
                 LOG.warn("{}没有中奖，没有需要记录 self_chosen_winning 的数据", date);
                 continue;
             }
+
             List<LotteryData> frontLotteryDataList = lotteryDataList.stream()
                     .filter(lotteryData -> lotteryData.getLotteryDrawNumberType() <= 4)
                     .toList();
