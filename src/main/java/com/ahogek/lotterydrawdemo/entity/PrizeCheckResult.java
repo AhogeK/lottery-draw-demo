@@ -148,7 +148,8 @@ public class PrizeCheckResult {
     }
 
     public Integer getEighthPrize() {
-        return eighthPrize;
+        if (eighthPrize == null) return 0;
+        else return eighthPrize;
     }
 
     public void setEighthPrize(Integer eighthPrize) {
@@ -156,7 +157,8 @@ public class PrizeCheckResult {
     }
 
     public Integer getNinthPrize() {
-        return ninthPrize;
+        if (ninthPrize == null) return 0;
+        else return ninthPrize;
     }
 
     public void setNinthPrize(Integer ninthPrize) {
