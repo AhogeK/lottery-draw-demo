@@ -100,13 +100,11 @@ public class LotteryDataServiceImpl implements LotteryDataService {
 
         Map<String, Object> firstPrizeResult = lotteryDataRepository.findFirstPrizeCountAndLastDate(blueNumbers, yellowNumbers);
         Map<String, Object> secondPrizeResult = lotteryDataRepository.findSecondPrizeCountAndLastDate(blueNumbers, yellowNumbers);
-        Map<String, Object> thirdPrizeResult = lotteryDataRepository.findThirdPrizeCountAndLastDate(blueNumbers, yellowNumbers);
-        Map<String, Object> fourthPrizeResult = lotteryDataRepository.findFourthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
-        Map<String, Object> fifthPrizeResult = lotteryDataRepository.findFifthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
-        Map<String, Object> sixthPrizeResult = lotteryDataRepository.findSixthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
-        Map<String, Object> seventhPrizeResult = lotteryDataRepository.findSeventhPrizeCountAndLastDate(blueNumbers, yellowNumbers);
-        Map<String, Object> eighthPrizeResult = lotteryDataRepository.findEighthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
-        Map<String, Object> ninthPrizeResult = lotteryDataRepository.findNinthPrizeCountAndLastDate(blueNumbers, yellowNumbers);
+        Map<String, Object> thirdPrizeResult = lotteryDataRepository.findThirdPrizeCountAndLastDateV2(blueNumbers, yellowNumbers);
+        Map<String, Object> fourthPrizeResult = lotteryDataRepository.findFourthPrizeCountAndLastDateV2(blueNumbers, yellowNumbers);
+        Map<String, Object> fifthPrizeResult = lotteryDataRepository.findFifthPrizeCountAndLastDateV2(blueNumbers, yellowNumbers);
+        Map<String, Object> sixthPrizeResult = lotteryDataRepository.findSixthPrizeCountAndLastDateV2(blueNumbers, yellowNumbers);
+        Map<String, Object> seventhPrizeResult = lotteryDataRepository.findSeventhPrizeCountAndLastDateV2(blueNumbers, yellowNumbers);
 
         return PrizeCheckResult.builder()
                 .firstPrize(getCount(firstPrizeResult), getLastDate(firstPrizeResult))
@@ -116,8 +114,6 @@ public class LotteryDataServiceImpl implements LotteryDataService {
                 .fifthPrize(getCount(fifthPrizeResult), getLastDate(fifthPrizeResult))
                 .sixthPrize(getCount(sixthPrizeResult), getLastDate(sixthPrizeResult))
                 .seventhPrize(getCount(seventhPrizeResult), getLastDate(seventhPrizeResult))
-                .eighthPrize(getCount(eighthPrizeResult), getLastDate(eighthPrizeResult))
-                .ninthPrize(getCount(ninthPrizeResult), getLastDate(ninthPrizeResult))
                 .build();
     }
 

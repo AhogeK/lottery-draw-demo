@@ -42,6 +42,16 @@ public class DrawUtil {
     /**
      * 根据匹配数构建中奖结果
      *
+     * <p>
+     * 新规变更 (2026年2月2日起）
+     * 1. 4-2 从四等奖变为三等奖
+     * 2. 4-1 从五等奖变为四等奖
+     * 3. 3-2 从六等奖变为五等奖 4-0 从七等奖变为五等奖
+     * 4. 3-1 从八等奖变为六等奖 2-2 从八等奖变为六等奖
+     * 5. 3-0 从九等奖变为七等奖 2-1 从九等奖变为七等奖 1-2 从九等奖变为七等奖 0-2 从九等奖变为七等奖
+     * 6. 取消原先的八等奖与九等奖
+     * </p>
+     *
      * @param frontMatch 前区匹配数
      * @param backMatch  后区匹配数
      * @return 中奖结果
@@ -50,16 +60,12 @@ public class DrawUtil {
         return PrizeCheckResult.builder()
                 .firstPrize(frontMatch == 5 && backMatch == 2 ? 1 : 0)
                 .secondPrize(frontMatch == 5 && backMatch == 1 ? 1 : 0)
-                .thirdPrize(frontMatch == 5 && backMatch == 0 ? 1 : 0)
-                .fourthPrize(frontMatch == 4 && backMatch == 2 ? 1 : 0)
-                .fifthPrize(frontMatch == 4 && backMatch == 1 ? 1 : 0)
-                .sixthPrize(frontMatch == 3 && backMatch == 2 ? 1 : 0)
-                .seventhPrize(frontMatch == 4 && backMatch == 0 ? 1 : 0)
-                .eighthPrize((frontMatch == 3 && backMatch == 1) || (frontMatch == 2 && backMatch == 2) ? 1 : 0)
-                .ninthPrize((frontMatch == 3 && backMatch == 0) ||
-                        (frontMatch == 1 && backMatch == 2) ||
-                        (frontMatch == 2 && backMatch == 1) ||
-                        (frontMatch == 0 && backMatch == 2) ? 1 : 0)
+                .thirdPrize((frontMatch == 5 && backMatch == 0) || (frontMatch == 4 && backMatch == 2) ? 1 : 0)
+                .fourthPrize(frontMatch == 4 && backMatch == 1 ? 1 : 0)
+                .fifthPrize((frontMatch == 4 && backMatch == 0) || (frontMatch == 3 && backMatch == 2) ? 1 : 0)
+                .sixthPrize((frontMatch == 3 && backMatch == 1) || (frontMatch == 2 && backMatch == 2) ? 1 : 0)
+                .seventhPrize((frontMatch == 3 && backMatch == 0) || (frontMatch == 2 && backMatch == 1) ||
+                        (frontMatch == 1 && backMatch == 2) || (frontMatch == 0 && backMatch == 2) ? 1 : 0)
                 .build();
     }
 

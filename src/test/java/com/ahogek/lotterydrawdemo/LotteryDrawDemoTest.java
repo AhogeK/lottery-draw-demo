@@ -84,7 +84,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawProbability() {
-        List<String> firstPrize = List.of("06", "11", "26", "33", "35", "08", "10");
+        List<String> firstPrize = List.of("04", "11", "24", "34", "35", "01", "02");
 
         int count = 0;
         for (int i = 0; i < 100; i++) {
@@ -132,7 +132,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void getDrawNumber() {
-        List<String> firstPrize = List.of("05", "07", "08", "15", "33", "06", "10");
+        List<String> firstPrize = List.of("04", "11", "24", "34", "35", "01", "02");
 
         long count = 0;
         for (int i = 0; i < 100; i++) {
@@ -156,7 +156,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("01", "07", "09", "11", "23", "02", "09");
+        List<String> firstPrize = List.of("04", "11", "24", "34", "35", "01", "02");
 
         firstPrizeInfo(firstPrize);
     }

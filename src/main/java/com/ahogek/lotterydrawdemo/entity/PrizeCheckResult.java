@@ -169,13 +169,11 @@ public class PrizeCheckResult {
                         历史中奖统计:
                                     一等奖: %d次 (奖金: 浮动)%s
                                     二等奖: %d次 (奖金: 浮动)%s
-                                    三等奖: %d次 (奖金: 10,000元)%s
-                                    四等奖: %d次 (奖金: 3,000元)%s
-                                    五等奖: %d次 (奖金: 300元)%s
-                                    六等奖: %d次 (奖金: 200元)%s
-                                    七等奖: %d次 (奖金: 100元)%s
-                                    八等奖: %d次 (奖金: 15元)%s
-                                    九等奖: %d次 (奖金: 5元)%s
+                                    三等奖: %d次 (奖金: 5000/6666元)%s
+                                    四等奖: %d次 (奖金: 300/380元)%s
+                                    五等奖: %d次 (奖金: 150/200元)%s
+                                    六等奖: %d次 (奖金: 15/18元)%s
+                                    七等奖: %d次 (奖金: 5/7元)%s
                         """,
                 firstPrize, firstPrize > 0 ? String.format(" 最新中奖: %s", firstPrizeLastDate) : "",
                 secondPrize, secondPrize > 0 ? String.format(" 最新中奖: %s", secondPrizeLastDate) : "",
@@ -183,9 +181,7 @@ public class PrizeCheckResult {
                 fourthPrize, fourthPrize > 0 ? String.format(" 最新中奖: %s", fourthPrizeLastDate) : "",
                 fifthPrize, fifthPrize > 0 ? String.format(" 最新中奖: %s", fifthPrizeLastDate) : "",
                 sixthPrize, sixthPrize > 0 ? String.format(" 最新中奖: %s", sixthPrizeLastDate) : "",
-                seventhPrize, seventhPrize > 0 ? String.format(" 最新中奖: %s", seventhPrizeLastDate) : "",
-                eighthPrize, eighthPrize > 0 ? String.format(" 最新中奖: %s", eighthPrizeLastDate) : "",
-                ninthPrize, ninthPrize > 0 ? String.format(" 最新中奖: %s", ninthPrizeLastDate) : ""
+                seventhPrize, seventhPrize > 0 ? String.format(" 最新中奖: %s", seventhPrizeLastDate) : ""
         );
     }
 

@@ -84,6 +84,39 @@ public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> 
     Map<String, Object> findThirdPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
                                                        @Param("backNumbers") List<String> backNumbers);
 
+    /**
+     * 新规下的三等奖统计 （5-0 4-2）
+     */
+    @Query("""
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(t.drawTime) as lastDate
+            )
+            FROM (
+                SELECT
+                    l.lotteryDrawTime as drawTime,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers
+                        THEN 1 ELSE 0 END
+                    ) as frontHit,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers
+                        THEN 1 ELSE 0 END
+                    ) as backHit
+                FROM LotteryData l
+                WHERE
+                    (l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers)
+                    OR
+                    (l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers)
+                GROUP BY l.lotteryDrawTime
+            ) t
+            WHERE
+                (t.frontHit = 5 AND t.backHit = 0)
+                OR
+                (t.frontHit = 4 AND t.backHit = 2)
+            """)
+    Map<String, Object> findThirdPrizeCountAndLastDateV2(@Param("frontNumbers") List<String> frontNumbers,
+                                                         @Param("backNumbers") List<String> backNumbers);
 
     // 四等奖:前区4个+后区2个
     @Query("""
@@ -104,6 +137,26 @@ public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> 
     Map<String, Object> findFourthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
                                                         @Param("backNumbers") List<String> backNumbers);
 
+    /**
+     * 新规四等奖 4-1
+     */
+    @Query("""
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(dates.drawTime) as lastDate
+            )
+            FROM (
+                SELECT l.lotteryDrawTime as drawTime
+                FROM LotteryData l
+                GROUP BY l.lotteryDrawTime
+                HAVING SUM(CASE
+                    WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers THEN 1 ELSE 0 END) = 4
+                   AND SUM(CASE
+                    WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers THEN 1 ELSE 0 END) = 1
+            ) dates
+            """)
+    Map<String, Object> findFourthPrizeCountAndLastDateV2(@Param("frontNumbers") List<String> frontNumbers,
+                                                          @Param("backNumbers") List<String> backNumbers);
 
     // 五等奖:前区4个+后区1个
     @Query("""
@@ -124,6 +177,40 @@ public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> 
     Map<String, Object> findFifthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
                                                        @Param("backNumbers") List<String> backNumbers);
 
+    /**
+     * 新规五等奖 4-0 3-2
+     */
+    @Query("""
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(t.drawTime) as lastDate
+            )
+            FROM (
+                SELECT
+                    l.lotteryDrawTime as drawTime,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers
+                        THEN 1 ELSE 0 END
+                    ) as frontHit,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers
+                        THEN 1 ELSE 0 END
+                    ) as backHit
+                FROM LotteryData l
+                WHERE
+                    (l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers)
+                    OR
+                    (l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers)
+                GROUP BY l.lotteryDrawTime
+            ) t
+            WHERE
+                (t.frontHit = 4 AND t.backHit = 0)
+                OR
+                (t.frontHit = 3 AND t.backHit = 2)
+            """)
+    Map<String, Object> findFifthPrizeCountAndLastDateV2(@Param("frontNumbers") List<String> frontNumbers,
+                                                         @Param("backNumbers") List<String> backNumbers);
+
     // 六等奖:前区3个+后区2个
     @Query("""
             SELECT new map(
@@ -142,6 +229,40 @@ public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> 
             """)
     Map<String, Object> findSixthPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
                                                        @Param("backNumbers") List<String> backNumbers);
+
+    /**
+     * 新规六等奖 3-1 2-2
+     */
+    @Query("""
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(t.drawTime) as lastDate
+            )
+            FROM (
+                SELECT
+                    l.lotteryDrawTime as drawTime,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers
+                        THEN 1 ELSE 0 END
+                    ) as frontHit,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers
+                        THEN 1 ELSE 0 END
+                    ) as backHit
+                FROM LotteryData l
+                WHERE
+                    (l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers)
+                    OR
+                    (l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers)
+                GROUP BY l.lotteryDrawTime
+            ) t
+            WHERE
+                (t.frontHit = 3 AND t.backHit = 1)
+                OR
+                (t.frontHit = 2 AND t.backHit = 2)
+            """)
+    Map<String, Object> findSixthPrizeCountAndLastDateV2(@Param("frontNumbers") List<String> frontNumbers,
+                                                         @Param("backNumbers") List<String> backNumbers);
 
 
     // 七等奖：前区4个，但排除四等奖和五等奖
@@ -162,6 +283,45 @@ public interface LotteryDataRepository extends JpaRepository<LotteryData, Long> 
             """)
     Map<String, Object> findSeventhPrizeCountAndLastDate(@Param("frontNumbers") List<String> frontNumbers,
                                                          @Param("backNumbers") List<String> backNumbers);
+
+    /**
+     * 新规七等奖 3-0 2-1 1-2 0-2
+     */
+    @Query("""
+            SELECT new map(
+                COUNT(*) as count,
+                MAX(t.drawTime) as lastDate
+            )
+            FROM (
+                SELECT
+                    l.lotteryDrawTime as drawTime,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers
+                        THEN 1 ELSE 0 END
+                    ) as frontHit,
+                    SUM(CASE
+                        WHEN l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers
+                        THEN 1 ELSE 0 END
+                    ) as backHit
+                FROM LotteryData l
+                WHERE
+                    (l.lotteryDrawNumberType <= 4 AND l.lotteryDrawNumber IN :frontNumbers)
+                    OR
+                    (l.lotteryDrawNumberType > 4 AND l.lotteryDrawNumber IN :backNumbers)
+                GROUP BY l.lotteryDrawTime
+            ) t
+            WHERE
+                (t.frontHit = 3 AND t.backHit = 0)
+                OR
+                (t.frontHit = 2 AND t.backHit = 1)
+                OR
+                (t.frontHit = 1 AND t.backHit = 2)
+                OR
+                (t.frontHit = 0 AND t.backHit = 2)
+            """)
+    Map<String, Object> findSeventhPrizeCountAndLastDateV2(@Param("frontNumbers") List<String> frontNumbers,
+                                                           @Param("backNumbers") List<String> backNumbers);
+
 
     // 八等奖：转换为JPQL，排除更高奖项
     @Query("""
