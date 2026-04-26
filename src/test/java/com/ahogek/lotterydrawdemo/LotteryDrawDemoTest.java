@@ -25,7 +25,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -210,17 +209,110 @@ class LotteryDrawDemoTest {
             return;
         }
 
-        LOG.info("开始根据历史数据计算平均摇奖次数...");
-        long totalCount = calculateAverageDrawCount();
-        LOG.info("计算完成，本次使用平均模拟次数为：{}", totalCount);
+        // 获取最新一期数据作为目标
+        Map<LocalDate, List<LotteryData>> historyMap = service.findAll().stream()
+                .collect(Collectors.groupingBy(LotteryData::getLotteryDrawTime));
+        LocalDate latestDate = historyMap.keySet().stream().max(LocalDate::compareTo).orElseThrow();
+        List<LotteryData> latestPeriodData = historyMap.get(latestDate);
 
-        System.out.println("本次随机次数为：" + totalCount);
-        long updateInterval = totalCount / 10000;
+        LOG.info("最新一期日期: {}, 将作为摇奖目标", latestDate);
+
+        // 构建不含最新一期的数据池
+        List<LotteryData> dataWithoutLatest = historyMap.entrySet().stream()
+                .filter(e -> !e.getKey().equals(latestDate))
+                .flatMap(e -> e.getValue().stream())
+                .toList();
+
+        List<List<String>> dataGroupWithoutLatest = new ArrayList<>();
+        LotteryDrawDemoApplication.groupAllData(dataGroupWithoutLatest, dataWithoutLatest);
+
+        // 将self_chosen_winning的自选数据也加入不含最新一期的数据池（与beforeAll逻辑一致）
+        List<Long> ids = selfChosenWinningRepository.findAll().stream().map(SelfChosenWinning::getWinningId)
+                .toList();
+        LotteryDrawDemoApplication.groupSelfChosenData(dataGroupWithoutLatest, selfChosenRepository.findAllById(ids));
+
+        // 提取最新一期的目标号码
+        Set<String> targetFront = latestPeriodData.stream()
+                .filter(d -> d.getLotteryDrawNumberType() <= 4)
+                .map(LotteryData::getLotteryDrawNumber)
+                .collect(Collectors.toSet());
+        Set<String> targetBack = latestPeriodData.stream()
+                .filter(d -> d.getLotteryDrawNumberType() > 4)
+                .map(LotteryData::getLotteryDrawNumber)
+                .collect(Collectors.toSet());
+
+        // 用不含最新一期的数据池，并行摇最新一期的目标号码，1000次取平均
+        LOG.info("开始计算摇出最新一期所需的平均次数...");
+        LOG.info("CPU核心数: {}", Runtime.getRuntime().availableProcessors());
+        LOG.info("正在启动并行运算引擎...");
+
+        int rounds = 1000;
+        AtomicInteger finishedCounter = new AtomicInteger(0);
+        long[] roundResults = new long[rounds];
+
+        try (ForkJoinPool customThreadPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors())) {
+            customThreadPool.submit(() -> {
+                java.util.stream.IntStream.range(0, rounds).parallel().forEach(r -> {
+                    long count = 0;
+                    Set<String> localFront = new HashSet<>(8);
+                    Set<String> localBack = new HashSet<>(4);
+                    ThreadLocalRandom random = ThreadLocalRandom.current();
+
+                    while (true) {
+                        count++;
+                        localFront.clear();
+                        localBack.clear();
+
+                        for (int i = 0; i < 5; i++) {
+                            List<String> pool = dataGroupWithoutLatest.get(i);
+                            int size = pool.size();
+                            while (localFront.size() <= i) {
+                                localFront.add(pool.get(random.nextInt(size)));
+                            }
+                        }
+
+                        if (!localFront.equals(targetFront)) {
+                            continue;
+                        }
+
+                        for (int i = 5; i < 7; i++) {
+                            List<String> pool = dataGroupWithoutLatest.get(i);
+                            int size = pool.size();
+                            while (localBack.size() <= (i - 5)) {
+                                localBack.add(pool.get(random.nextInt(size)));
+                            }
+                        }
+
+                        if (localBack.equals(targetBack)) {
+                            break;
+                        }
+                    }
+
+                    roundResults[r] = count;
+                    int current = finishedCounter.incrementAndGet();
+                    int remaining = rounds - current;
+                    LOG.info("进度[{}/{}] 剩余:{} | 耗次:{}",
+                            String.format("%4d", current),
+                            rounds,
+                            String.format("%4d", remaining),
+                            String.format("%9d", count));
+                });
+            }).get();
+        } catch (Exception e) {
+            LOG.error("计算出错", e);
+        }
+
+        long avgCount = Arrays.stream(roundResults).sum() / rounds;
+        LOG.info("摇出最新一期平均需要 {} 次（{}轮并行平均）", avgCount, rounds);
+
+        // 使用全部数据（包括最新一期）进行正式摇奖
+        System.out.println("本次随机次数为：" + avgCount);
+        long updateInterval = avgCount / 10000;
         if (updateInterval == 0) updateInterval = 1;
         long nextUpdate = updateInterval;
 
         long count = 0;
-        ProgressBarWithTime progressBar = new ProgressBarWithTime(totalCount, 50);
+        ProgressBarWithTime progressBar = new ProgressBarWithTime(avgCount, 50);
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out))) {
             do {
@@ -242,7 +334,7 @@ class LotteryDrawDemoTest {
                     progressBar.updateProgressBar(writer, count);
                     nextUpdate += updateInterval;
                 }
-            } while (count < totalCount);
+            } while (count < avgCount);
 
             writer.write("\n");
             writer.flush();
@@ -273,129 +365,6 @@ class LotteryDrawDemoTest {
             firstPrizeInfo(result);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * 高性能并行计算平均摇奖次数
-     * 优化点：去除锁竞争、减少对象创建、移除循环内排序
-     */
-    private long calculateAverageDrawCount() {
-        // 1. 获取并分组历史数据
-        Map<LocalDate, List<LotteryData>> historyMap = service.findAll().stream()
-                .collect(Collectors.groupingBy(LotteryData::getLotteryDrawTime));
-
-        // 2. 定义数据结构
-        record TargetSets(Set<String> front, Set<String> back, String originalString) {
-        }
-
-        // 预处理目标数据
-        List<TargetSets> historyTargets = historyMap.values().stream()
-                .map(list -> {
-                    Set<String> frontSet = list.stream()
-                            .filter(d -> d.getLotteryDrawNumberType() <= 4)
-                            .map(LotteryData::getLotteryDrawNumber)
-                            .collect(Collectors.toSet());
-                    Set<String> backSet = list.stream()
-                            .filter(d -> d.getLotteryDrawNumberType() > 4)
-                            .map(LotteryData::getLotteryDrawNumber)
-                            .collect(Collectors.toSet());
-
-                    if (frontSet.size() == 5 && backSet.size() == 2) {
-                        return new TargetSets(frontSet, backSet, list.toString());
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .toList();
-
-        if (historyTargets.isEmpty()) {
-            return 20000000L;
-        }
-
-        int totalSize = historyTargets.size();
-        // 引入原子计数器，用于多线程环境下的进度统计
-        AtomicInteger finishedCounter = new AtomicInteger(0);
-
-        LOG.info("=== 开始全量回测 ===");
-        LOG.info("历史数据总数: {}", totalSize);
-        LOG.info("CPU核心数: {}", Runtime.getRuntime().availableProcessors());
-        LOG.info("正在启动并行运算引擎...");
-
-        // 3. 使用 try-with-resources 自动管理线程池 (Java 19+)
-        try (ForkJoinPool customThreadPool = new ForkJoinPool(
-                Runtime.getRuntime().availableProcessors())) {
-
-            // 提交任务
-            ForkJoinTask<OptionalDouble> task = customThreadPool.submit(() ->
-                    historyTargets.parallelStream().mapToLong(target -> {
-                        // 使用 ThreadLocalRandom 避免锁竞争
-                        ThreadLocalRandom random = ThreadLocalRandom.current();
-
-                        long currentCount = 0;
-
-                        // 显式泛型定义
-                        Set<String> localFront = new HashSet<>(8);
-                        Set<String> localBack = new HashSet<>(4);
-
-                        List<List<String>> dataGroups = this.allDataGroup;
-
-                        while (true) {
-                            currentCount++;
-                            localFront.clear();
-                            localBack.clear();
-
-                            // --- 极速摇奖逻辑 ---
-
-                            // 前区
-                            for (int i = 0; i < 5; i++) {
-                                List<String> pool = dataGroups.get(i);
-                                int size = pool.size();
-                                while (localFront.size() <= i) {
-                                    localFront.add(pool.get(random.nextInt(size)));
-                                }
-                            }
-
-                            if (!localFront.equals(target.front)) {
-                                continue;
-                            }
-
-                            // 后区
-                            for (int i = 5; i < 7; i++) {
-                                List<String> pool = dataGroups.get(i);
-                                int size = pool.size();
-                                while (localBack.size() <= (i - 5)) {
-                                    localBack.add(pool.get(random.nextInt(size)));
-                                }
-                            }
-
-                            if (localBack.equals(target.back)) {
-                                break; // 命中
-                            }
-                        }
-
-                        // --- 进度展示与日志 ---
-                        int current = finishedCounter.incrementAndGet();
-                        int remaining = totalSize - current;
-
-                        // 打印详细日志，营造快速运行的感觉
-                        // 格式: [进度] [剩余] - 耗时:次数 - 数据摘要
-                        LOG.info("进度[{}/{}] 剩余:{} | 耗次:{} | 复现: {}",
-                                String.format("%4d", current),
-                                totalSize,
-                                String.format("%4d", remaining),
-                                String.format("%9d", currentCount),
-                                target.originalString);
-
-                        return currentCount;
-                    }).average()
-            );
-
-            return (long) task.get().orElse(20000000.0);
-
-        } catch (Exception e) {
-            LOG.error("计算出错", e);
-            return 20000000L;
         }
     }
 
