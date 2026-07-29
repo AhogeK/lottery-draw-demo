@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadLocalRandom;
@@ -83,7 +84,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawProbability() {
-        List<String> firstPrize = List.of("04", "11", "24", "34", "35", "01", "02");
+        List<String> firstPrize = List.of("01", "13", "26", "29", "30", "09", "11");
 
         int count = 0;
         for (int i = 0; i < 100; i++) {
@@ -131,7 +132,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void getDrawNumber() {
-        List<String> firstPrize = List.of("04", "11", "24", "34", "35", "01", "02");
+        List<String> firstPrize = List.of("05", "13", "22", "26", "32", "02", "03");
 
         long count = 0;
         for (int i = 0; i < 100; i++) {
@@ -155,7 +156,7 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDrawFirstPrize() {
-        List<String> firstPrize = List.of("04", "11", "24", "34", "35", "01", "02");
+        List<String> firstPrize = List.of("01", "13", "26", "29", "30", "09", "11");
 
         firstPrizeInfo(firstPrize);
     }
@@ -183,24 +184,35 @@ class LotteryDrawDemoTest {
 
     @Test
     void testDraw() {
-        // 判断如果不是周一周三周六则不进行抽奖
+        // 判断当前时间，晚上9点后算下一期
         LocalDate today = LocalDate.now();
-        DayOfWeek dayOfWeek = today.getDayOfWeek();
+        int hour = LocalTime.now().getHour();
+        LocalDate targetDate;
+        if (hour >= 21) {
+            // 晚上9点后，算下一个摇奖日
+            targetDate = getNextDrawDay(today);
+        } else {
+            // 晚上9点前，算今天
+            targetDate = today;
+        }
+
+        // 判断目标日期是否是摇奖日
+        DayOfWeek dayOfWeek = targetDate.getDayOfWeek();
         boolean isDrawDay = dayOfWeek == DayOfWeek.MONDAY || dayOfWeek == DayOfWeek.WEDNESDAY || dayOfWeek == DayOfWeek.SATURDAY;
         if (!isDrawDay) {
-            System.out.println("今天不是抽奖日！");
+            System.out.println("目标日期不是抽奖日！");
             return;
         }
         if (!selfChosenRepository.findAllByPrizeIsNull().isEmpty()) {
             System.out.println("有未开奖的数据，请先执行syncSelfChosenPrizeData");
         }
-        // 先判断今天有没有抽过，抽过的不进行操作直接结束
+        // 先判断目标日期有没有抽过，抽过的不进行操作直接结束
         AtomicBoolean alreadyDraw = new AtomicBoolean(false);
         selfChosenRepository.findTopByOrderByDrawTimeDesc().ifPresent(selfChosen -> {
-            if (selfChosen.getDrawTime().isEqual(LocalDate.now())) {
-                System.out.println("今天已经抽过了!");
+            if (selfChosen.getDrawTime().isEqual(targetDate)) {
+                System.out.println("该期已经抽过了!");
                 // 输出抽过的号码
-                List<Integer> drawnNumbers = selfChosenRepository.findNumbersByDrawTimeOrderByNumberType(LocalDate.now());
+                List<Integer> drawnNumbers = selfChosenRepository.findNumbersByDrawTimeOrderByNumberType(targetDate);
                 System.out.println(drawnNumbers);
                 alreadyDraw.set(true);
             }
@@ -251,53 +263,51 @@ class LotteryDrawDemoTest {
         long[] roundResults = new long[rounds];
 
         try (ForkJoinPool customThreadPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors())) {
-            customThreadPool.submit(() -> {
-                java.util.stream.IntStream.range(0, rounds).parallel().forEach(r -> {
-                    long count = 0;
-                    Set<String> localFront = new HashSet<>(8);
-                    Set<String> localBack = new HashSet<>(4);
-                    ThreadLocalRandom random = ThreadLocalRandom.current();
+            customThreadPool.submit(() -> java.util.stream.IntStream.range(0, rounds).parallel().forEach(r -> {
+                long count = 0;
+                Set<String> localFront = new HashSet<>(8);
+                Set<String> localBack = new HashSet<>(4);
+                ThreadLocalRandom random = ThreadLocalRandom.current();
 
-                    while (true) {
-                        count++;
-                        localFront.clear();
-                        localBack.clear();
+                while (true) {
+                    count++;
+                    localFront.clear();
+                    localBack.clear();
 
-                        for (int i = 0; i < 5; i++) {
-                            List<String> pool = dataGroupWithoutLatest.get(i);
-                            int size = pool.size();
-                            while (localFront.size() <= i) {
-                                localFront.add(pool.get(random.nextInt(size)));
-                            }
-                        }
-
-                        if (!localFront.equals(targetFront)) {
-                            continue;
-                        }
-
-                        for (int i = 5; i < 7; i++) {
-                            List<String> pool = dataGroupWithoutLatest.get(i);
-                            int size = pool.size();
-                            while (localBack.size() <= (i - 5)) {
-                                localBack.add(pool.get(random.nextInt(size)));
-                            }
-                        }
-
-                        if (localBack.equals(targetBack)) {
-                            break;
+                    for (int i = 0; i < 5; i++) {
+                        List<String> pool = dataGroupWithoutLatest.get(i);
+                        int size = pool.size();
+                        while (localFront.size() <= i) {
+                            localFront.add(pool.get(random.nextInt(size)));
                         }
                     }
 
-                    roundResults[r] = count;
-                    int current = finishedCounter.incrementAndGet();
-                    int remaining = rounds - current;
-                    LOG.info("进度[{}/{}] 剩余:{} | 耗次:{}",
-                            String.format("%4d", current),
-                            rounds,
-                            String.format("%4d", remaining),
-                            String.format("%9d", count));
-                });
-            }).get();
+                    if (!localFront.equals(targetFront)) {
+                        continue;
+                    }
+
+                    for (int i = 5; i < 7; i++) {
+                        List<String> pool = dataGroupWithoutLatest.get(i);
+                        int size = pool.size();
+                        while (localBack.size() <= (i - 5)) {
+                            localBack.add(pool.get(random.nextInt(size)));
+                        }
+                    }
+
+                    if (localBack.equals(targetBack)) {
+                        break;
+                    }
+                }
+
+                roundResults[r] = count;
+                int current = finishedCounter.incrementAndGet();
+                int remaining = rounds - current;
+                LOG.info("进度[{}/{}] 剩余:{} | 耗次:{}",
+                        String.format("%4d", current),
+                        rounds,
+                        String.format("%4d", remaining),
+                        String.format("%9d", count));
+            })).get();
         } catch (Exception e) {
             LOG.error("计算出错", e);
         }
@@ -356,6 +366,7 @@ class LotteryDrawDemoTest {
                 } else {
                     selfChosen = new SelfChosen(result.get(i), i, sortBeforeBackResultMap.get(result.get(i)));
                 }
+                selfChosen.setDrawTime(targetDate);
                 insertList.add(selfChosen);
             }
             selfChosenRepository.saveAll(insertList);
@@ -390,9 +401,6 @@ class LotteryDrawDemoTest {
                 .collect(Collectors.groupingBy(SelfChosen::getDrawTime));
 
         List<SelfChosen> updateRecords = new ArrayList<>();
-
-        List<SelfChosen> carryOverRecords = new ArrayList<>();
-        LocalDate latestDate = groupedByDate.keySet().stream().max(LocalDate::compareTo).orElse(null);
 
         int prize = 0;
         // 处理每次的记录
@@ -431,38 +439,10 @@ class LotteryDrawDemoTest {
                     updateRecords.add(self);
                 }
                 LOG.info("Result for {}: No prize.", drawTime);
-
-                if (drawTime.equals(latestDate)) {
-                    LocalDate nextDrawDate = getNextDrawDay(drawTime);
-
-                    List<SelfChosen> nextRound = dayRecords.stream()
-                            .map(old -> {
-                                SelfChosen next = new SelfChosen(old.getNumber(), old.getNumberType(), old.getSort());
-                                next.setDrawTime(nextDrawDate);
-                                next.setPrize(null);
-                                return next;
-                            })
-                            .toList();
-
-                    carryOverRecords.addAll(nextRound);
-                    LOG.info(">> Trigger carry-over: Moving numbers from {} to next draw date {}", drawTime, nextDrawDate);
-                }
             }
         }
 
         selfChosenRepository.saveAll(updateRecords);
-
-        if (!carryOverRecords.isEmpty()) {
-            List<SelfChosen> uniqueCarryOver = carryOverRecords.stream()
-                    .filter(recordSelfChosen -> !selfChosenRepository.existsByDrawTimeAndNumberAndNumberType(
-                            recordSelfChosen.getDrawTime(), recordSelfChosen.getNumber(), recordSelfChosen.getNumberType())).toList();
-            if (!uniqueCarryOver.isEmpty()) {
-                selfChosenRepository.saveAll(uniqueCarryOver);
-                LOG.info("Successfully carried over {} number to the next round.", uniqueCarryOver.size());
-            } else {
-                LOG.info("Carry-over records already exist. Skipping");
-            }
-        }
 
         // 同时同步 SelfChosenWinning
         List<SelfChosenWinning> insertList = new ArrayList<>();
@@ -509,15 +489,6 @@ class LotteryDrawDemoTest {
 
         if (!insertList.isEmpty())
             selfChosenWinningRepository.saveAll(insertList);
-    }
-
-    private LocalDate getNextDrawDay(LocalDate date) {
-        LocalDate nextDate = date.plusDays(1);
-        while (true) {
-            DayOfWeek day = nextDate.getDayOfWeek();
-            if (day == DayOfWeek.MONDAY || day == DayOfWeek.WEDNESDAY || day == DayOfWeek.SATURDAY) return nextDate;
-            nextDate = nextDate.plusDays(1);
-        }
     }
 
     @Test
@@ -568,5 +539,14 @@ class LotteryDrawDemoTest {
             // 存储到数据库
             selfChosenWinningRepository.saveAll(insertList);
         });
+    }
+
+    private LocalDate getNextDrawDay(LocalDate date) {
+        LocalDate nextDate = date.plusDays(1);
+        while (true) {
+            DayOfWeek day = nextDate.getDayOfWeek();
+            if (day == DayOfWeek.MONDAY || day == DayOfWeek.WEDNESDAY || day == DayOfWeek.SATURDAY) return nextDate;
+            nextDate = nextDate.plusDays(1);
+        }
     }
 }
