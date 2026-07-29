@@ -198,7 +198,7 @@ class LotteryDrawDemoTest {
 
         // 判断目标日期是否是摇奖日
         DayOfWeek dayOfWeek = targetDate.getDayOfWeek();
-        boolean isDrawDay = dayOfWeek == DayOfWeek.MONDAY || dayOfWeek == DayOfWeek.WEDNESDAY || dayOfWeek == DayOfWeek.SATURDAY;
+        boolean isDrawDay = dayOfWeek.equals(DayOfWeek.MONDAY) || dayOfWeek.equals(DayOfWeek.WEDNESDAY) || dayOfWeek.equals(DayOfWeek.SATURDAY);
         if (!isDrawDay) {
             System.out.println("目标日期不是抽奖日！");
             return;
